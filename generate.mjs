@@ -1,6 +1,6 @@
 // Fetches today's + tomorrow's EMR Sheffield <-> London services from
 // Realtime Trains (API + website scrape for stock identification) and writes
-// index.html with client-side toggles for date, direction filter, and order.
+// index.html with client-side toggles for date, direction, stock class, order.
 
 import { writeFile } from "node:fs/promises";
 
@@ -26,8 +26,19 @@ function prettyDate(ymd) {
     weekday: "long",
     day: "numeric",
     month: "long",
-    year: "numeric",
     timeZone: "UTC",
+  });
+}
+
+function prettyTimestamp(iso) {
+  return new Date(iso).toLocaleString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "UTC",
+    timeZoneName: "short",
   });
 }
 
@@ -218,13 +229,13 @@ async function fetchDay(token, date) {
   }
 }
 
+function stockLabel(cls) {
+  if (cls === "810") return "Aurora";
+  if (cls === "222") return "Meridian";
+  return "Unknown";
+}
+
 function serviceCard(s, date) {
-  const label =
-    s.stockClass === "810"
-      ? "Class 810 Aurora"
-      : s.stockClass === "222"
-      ? "Class 222 Meridian"
-      : "Unknown";
   const link = s.serviceUid
     ? `${RTT_WEB}/service/gb-nr:${encodeURIComponent(s.serviceUid)}/${date}/detailed`
     : null;
@@ -234,20 +245,23 @@ function serviceCard(s, date) {
     : `<div class="${cls}">`;
   const close = link ? "</a>" : "</div>";
 
+  const metaBits = [];
+  if (s.numberOfVehicles) metaBits.push(`${s.numberOfVehicles} coach${s.numberOfVehicles === 1 ? "" : "es"}`);
+  if (s.platform) metaBits.push(`Plat ${escapeHtml(s.platform)}`);
+  if (s.unitNumber) metaBits.push(`Unit ${escapeHtml(s.unitNumber)}`);
+
   return `${open}
     <div class="times">
       <span class="dep">${escapeHtml(s.departureTime)}</span>
       <span class="arrow">→</span>
       <span class="arr">${escapeHtml(s.arrivalTime)}</span>
+      ${s.cancelled ? `<span class="cancel-tag">Cancelled</span>` : ""}
     </div>
     <div class="route">${escapeHtml(s.origin)} → ${escapeHtml(s.destination)}</div>
     <div class="meta">
-      <span class="stock-badge">${escapeHtml(label)}</span>
-      <span class="conf-badge">${escapeHtml(s.confidence)}</span>
-      ${s.numberOfVehicles ? `<span class="coaches">${s.numberOfVehicles} coaches</span>` : ""}
-      ${s.unitNumber ? `<span class="unit">Unit ${escapeHtml(s.unitNumber)}</span>` : ""}
-      ${s.platform ? `<span class="platform">Plat ${escapeHtml(s.platform)}</span>` : ""}
-      ${s.cancelled ? `<span class="cancel">CANCELLED</span>` : ""}
+      <span class="stock">${escapeHtml(stockLabel(s.stockClass))}</span>
+      <span class="conf">${escapeHtml(s.confidence)}</span>
+      ${metaBits.length ? `<span class="chips">${metaBits.join(" · ")}</span>` : ""}
     </div>
   ${close}`;
 }
@@ -257,12 +271,12 @@ function directionPanel(directionKey, title, services, date) {
   const body =
     services.length === 0
       ? `<p class="empty">No EMR services found.</p>`
-      : `<p class="summary">
-           ${services.length} service${services.length === 1 ? "" : "s"} ·
-           <span class="pill stock-810">${count("810")} Class 810</span>
-           <span class="pill stock-222">${count("222")} Class 222</span>
-           <span class="pill stock-unknown">${count("unknown")} unknown</span>
-         </p>
+      : `<div class="summary">
+           <span>${services.length} service${services.length === 1 ? "" : "s"}</span>
+           <span class="stat"><i class="dot stock-810"></i>${count("810")} Aurora</span>
+           <span class="stat"><i class="dot stock-222"></i>${count("222")} Meridian</span>
+           ${count("unknown") ? `<span class="stat muted"><i class="dot stock-unknown"></i>${count("unknown")} unknown</span>` : ""}
+         </div>
          <div class="services">${services
            .map((s) => serviceCard(s, date))
            .join("\n")}</div>`;
@@ -275,7 +289,6 @@ function directionPanel(directionKey, title, services, date) {
 
 function datePage(key, dayLabel, dayData) {
   const { date, toLondon, toSheffield, error } = dayData;
-  const dateLine = `${dayLabel} — ${prettyDate(date)}`;
   const allEmpty = toLondon.length === 0 && toSheffield.length === 0;
   const emptyNote =
     allEmpty && !error
@@ -286,7 +299,10 @@ function datePage(key, dayLabel, dayData) {
     : "";
 
   return `<div data-date-section="${key}" class="date-section">
-    <h2 class="date-heading">${escapeHtml(dateLine)}</h2>
+    <p class="date-heading">
+      <span class="date-label">${escapeHtml(dayLabel)}</span>
+      <span class="date-long">${escapeHtml(prettyDate(date))}</span>
+    </p>
     ${errorNote}
     ${emptyNote}
     ${directionPanel("to-london", "Sheffield → London St Pancras", toLondon, date)}
@@ -300,193 +316,323 @@ function renderHtml(today, tomorrow, generatedAt) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>EMR Sheffield ↔ London</title>
+<title>EMR Sheffield ⇄ London</title>
 <style>
   :root {
     color-scheme: light dark;
-    --bg: #f7f7f8;
-    --fg: #111;
-    --muted: #666;
-    --card: #fff;
-    --border: #e3e3e8;
-    --accent: #0f172a;
-    --stock-810: #2563eb;
-    --stock-222: #dc2626;
-    --stock-unknown: #6b7280;
-    --conf-confirmed: #059669;
-    --conf-predicted: #d97706;
-    --conf-unknown: #6b7280;
+    --bg: #F5F3EC;
+    --surface: #FAF8F1;
+    --surface-alt: #EAE7DB;
+    --fg: #141413;
+    --muted: #6B6A63;
+    --subtle: #9A988F;
+    --border: #E0DCCC;
+    --border-strong: #C5C1AE;
+    --ok: #5B8A4A;
+    --warn: #B8882F;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #0f0f12;
-      --fg: #e8e8ea;
-      --muted: #9a9aa2;
-      --card: #181820;
-      --border: #2a2a33;
-      --accent: #e8e8ea;
+      --bg: #1A1916;
+      --surface: #22201C;
+      --surface-alt: #2C2A24;
+      --fg: #EDEBE3;
+      --muted: #9F9D94;
+      --subtle: #6F6E66;
+      --border: #302E27;
+      --border-strong: #46443C;
+      --ok: #84A878;
+      --warn: #D9A444;
     }
   }
   * { box-sizing: border-box; }
+  html, body { background: var(--bg); }
   body {
-    margin: 0; padding: 0 1rem 3rem;
-    background: var(--bg); color: var(--fg);
-    font: 15px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    padding: 0 20px 80px;
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
+    color: var(--fg);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-  header {
-    max-width: 960px; margin: 0 auto; padding: 2rem 0 1rem;
+  .wrap { max-width: 960px; margin: 0 auto; position: relative; }
+  .updated {
+    position: absolute;
+    top: 20px; right: 0;
+    font-size: 11px;
+    color: var(--subtle);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    display: inline-flex; align-items: center; gap: 6px;
   }
-  header h1 { margin: 0; font-size: 1.5rem; }
+  .updated::before {
+    content: "";
+    width: 6px; height: 6px; border-radius: 999px;
+    background: var(--ok);
+    opacity: 0.7;
+  }
+  header { padding: 56px 0 28px; }
+  header h1 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    color: var(--fg);
+  }
+  header .sub {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 2px;
+  }
+
   .controls {
     position: sticky; top: 0; z-index: 10;
-    max-width: 960px; margin: 0 auto;
-    padding: .75rem 0;
-    background: color-mix(in srgb, var(--bg) 85%, transparent);
-    backdrop-filter: blur(8px);
+    padding: 10px 0;
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    backdrop-filter: saturate(160%) blur(10px);
+    -webkit-backdrop-filter: saturate(160%) blur(10px);
     border-bottom: 1px solid var(--border);
-    display: flex; flex-wrap: wrap; gap: .5rem 1rem;
+    display: flex; flex-wrap: wrap; gap: 8px;
   }
-  .control-group {
-    display: inline-flex; border: 1px solid var(--border);
-    border-radius: 8px; overflow: hidden;
-    background: var(--card);
+  .seg {
+    display: inline-flex;
+    background: var(--surface-alt);
+    border-radius: 8px;
+    padding: 2px;
   }
-  .control-group button {
+  .seg button {
     appearance: none; border: 0; background: transparent;
-    color: var(--muted); font: inherit; font-size: .85rem;
-    padding: .4rem .7rem; cursor: pointer;
-    border-right: 1px solid var(--border);
+    color: var(--muted);
+    font: inherit; font-size: 13px; font-weight: 500;
+    padding: 5px 11px; border-radius: 6px;
+    cursor: pointer;
+    transition: color 120ms ease, background 120ms ease;
   }
-  .control-group button:last-child { border-right: 0; }
-  .control-group button:hover { color: var(--fg); }
-  .control-group button.active {
-    background: var(--accent); color: var(--bg); font-weight: 500;
+  .seg button:hover { color: var(--fg); }
+  .seg button.active {
+    background: var(--surface);
+    color: var(--fg);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 0 0 0.5px rgba(0,0,0,0.06);
   }
-  .control-label {
-    font-size: .75rem; color: var(--muted);
-    align-self: center; letter-spacing: .04em; text-transform: uppercase;
+  @media (prefers-color-scheme: dark) {
+    .seg button.active { box-shadow: 0 0 0 1px var(--border-strong); }
   }
-  main { max-width: 960px; margin: 0 auto; }
+
+  main { display: flex; flex-direction: column; }
+
   .date-section {
-    display: flex; flex-direction: column; gap: 2rem;
-    margin-top: 2rem;
+    display: flex; flex-direction: column; gap: 44px;
+    padding: 40px 0 0;
   }
   .date-heading {
-    margin: 0; font-size: 1.15rem; color: var(--muted); font-weight: 500;
+    margin: 0;
+    display: flex; align-items: baseline; gap: 10px;
   }
-  section h3 { margin: 0 0 .5rem; font-size: 1.05rem; }
+  .date-label {
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--subtle);
+  }
+  .date-long {
+    font-size: 13px; color: var(--muted);
+  }
 
-  /* Order by "first direction" selection */
-  [data-direction-section="to-london"] { order: 1; }
-  [data-direction-section="to-sheffield"] { order: 2; }
-  body[data-first="to-sheffield"] [data-direction-section="to-sheffield"] { order: 1; }
-  body[data-first="to-sheffield"] [data-direction-section="to-london"] { order: 2; }
+  section h3 {
+    margin: 0 0 10px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--fg);
+  }
 
-  /* Date tabs: show one */
+  .summary {
+    display: flex; flex-wrap: wrap; gap: 4px 14px;
+    margin: 0 0 16px;
+    font-size: 12px; color: var(--muted);
+  }
+  .summary .stat { display: inline-flex; align-items: center; }
+  .summary .stat.muted { color: var(--subtle); }
+  .dot {
+    display: inline-block; width: 6px; height: 6px;
+    border-radius: 999px; margin-right: 6px;
+    background: var(--border-strong);
+  }
+  .dot.stock-810 {
+    background: #FFFFFF;
+    box-shadow: inset 0 0 0 1px var(--border-strong);
+  }
+  .dot.stock-222 { background: #141413; }
+  @media (prefers-color-scheme: dark) {
+    .dot.stock-810 {
+      background: #EDEBE3;
+      box-shadow: none;
+    }
+    .dot.stock-222 {
+      background: #0A0908;
+      box-shadow: inset 0 0 0 1px var(--border);
+    }
+  }
+
+  .services {
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .service {
+    display: block; text-decoration: none;
+    color: var(--fg);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    transition: border-color 120ms ease, transform 80ms ease;
+  }
+  /* Aurora = light, clean. Meridian = warm stone, a half-step darker than page. */
+  .service.stock-810 {
+    background: #FFFFFF;
+    border-color: #E0DCCC;
+  }
+  .service.stock-222 {
+    background: #DCD6C2;
+    border-color: #C9C2A8;
+  }
+  @media (prefers-color-scheme: dark) {
+    .service.stock-810 {
+      background: #EDEBE3;
+      border-color: #EDEBE3;
+      --fg: #141413;
+      --muted: #6B6A63;
+      --subtle: #9A988F;
+      --border-strong: #C5C1AE;
+    }
+    .service.stock-222 {
+      background: #13110F;
+      border-color: #2A2822;
+    }
+  }
+  a.service:hover { border-color: var(--border-strong); }
+  a.service.stock-810:hover { border-color: #C5C1AE; }
+  a.service.stock-222:hover { border-color: #B5AD90; }
+  @media (prefers-color-scheme: dark) {
+    a.service.stock-810:hover { border-color: #D6D2C2; }
+    a.service.stock-222:hover { border-color: #3A382F; }
+  }
+  a.service:active { transform: translateY(0.5px); }
+
+  .times {
+    display: flex; align-items: baseline; gap: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+  .times .dep {
+    font-size: 17px; font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  .times .arrow { color: var(--subtle); font-size: 12px; }
+  .times .arr { color: var(--muted); font-size: 13px; }
+  .times .cancel-tag {
+    margin-left: auto;
+    color: var(--warn);
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 0.04em; text-transform: uppercase;
+  }
+
+  .route {
+    color: var(--muted); font-size: 12px;
+    margin: 2px 0 10px;
+  }
+
+  .meta {
+    display: flex; flex-wrap: wrap; align-items: center;
+    gap: 4px 12px;
+    font-size: 12px;
+  }
+  .meta .stock { font-weight: 500; color: var(--fg); }
+  .service.stock-unknown .meta .stock { color: var(--muted); font-weight: 400; }
+
+  .meta .conf {
+    font-size: 10px; font-weight: 500;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--subtle);
+    display: inline-flex; align-items: center;
+  }
+  .meta .conf::before {
+    content: ""; display: inline-block;
+    width: 5px; height: 5px; border-radius: 999px;
+    background: var(--border-strong); margin-right: 5px;
+  }
+  .service.conf-confirmed .meta .conf::before { background: var(--ok); }
+  .service.conf-predicted .meta .conf::before { background: var(--warn); }
+
+  .meta .chips { color: var(--muted); }
+
+  .service.cancelled .times .dep,
+  .service.cancelled .times .arr,
+  .service.cancelled .route,
+  .service.cancelled .meta .stock,
+  .service.cancelled .meta .chips {
+    opacity: 0.45;
+  }
+
+  .empty { color: var(--muted); font-size: 13px; margin: 0; }
+  .error {
+    background: color-mix(in srgb, var(--warn) 8%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--warn) 28%, var(--border));
+    color: var(--warn);
+    padding: 10px 14px; border-radius: 8px; font-size: 13px;
+  }
+
+  footer {
+    margin-top: 72px; padding-top: 20px;
+    border-top: 1px solid var(--border);
+    color: var(--subtle); font-size: 12px;
+  }
+  footer a { color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
+  footer a:hover { color: var(--fg); }
+
+  /* Filter: date */
   body[data-date="today"] [data-date-section="tomorrow"] { display: none; }
   body[data-date="tomorrow"] [data-date-section="today"] { display: none; }
 
-  /* Direction filter: hide the non-selected one (both = show both) */
+  /* Filter: direction — always one at a time */
   body[data-direction="to-london"] [data-direction-section="to-sheffield"] { display: none; }
   body[data-direction="to-sheffield"] [data-direction-section="to-london"] { display: none; }
 
-  /* "First" control is meaningless when only one direction is visible */
-  body[data-direction="to-london"] [data-first-group],
-  body[data-direction="to-sheffield"] [data-first-group] {
-    opacity: .4; pointer-events: none;
-  }
-
-  .summary { color: var(--muted); margin: 0 0 1rem; font-size: .9rem; }
-  .pill {
-    display: inline-block; padding: .1rem .5rem; border-radius: 999px;
-    font-size: .8rem; font-weight: 500; margin-right: .25rem;
-    border: 1px solid var(--border);
-  }
-  .pill.stock-810 { color: var(--stock-810); border-color: var(--stock-810); }
-  .pill.stock-222 { color: var(--stock-222); border-color: var(--stock-222); }
-  .pill.stock-unknown { color: var(--stock-unknown); }
-  .services {
-    display: grid; gap: .6rem;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  }
-  .service {
-    display: block; text-decoration: none; color: inherit;
-    background: var(--card); border: 1px solid var(--border);
-    border-left: 4px solid var(--stock-unknown);
-    padding: .75rem .9rem; border-radius: 8px;
-    transition: border-color .15s, transform .05s;
-  }
-  a.service:hover { border-color: var(--fg); }
-  a.service:active { transform: translateY(1px); }
-  .service.stock-810 { border-left-color: var(--stock-810); }
-  .service.stock-222 { border-left-color: var(--stock-222); }
-  .service.cancelled { opacity: .55; text-decoration: line-through; }
-  .times {
-    font-variant-numeric: tabular-nums;
-    font-size: 1.1rem; font-weight: 600;
-    display: flex; gap: .5rem; align-items: center;
-  }
-  .arrow { color: var(--muted); font-weight: 400; }
-  .route { color: var(--muted); font-size: .85rem; margin: .15rem 0 .5rem; }
-  .meta { display: flex; flex-wrap: wrap; gap: .35rem; font-size: .8rem; }
-  .meta span {
-    padding: .1rem .45rem; border-radius: 4px;
-    background: color-mix(in srgb, var(--fg) 7%, transparent);
-  }
-  .stock-badge { font-weight: 500; }
-  .service.stock-810 .stock-badge { color: var(--stock-810); }
-  .service.stock-222 .stock-badge { color: var(--stock-222); }
-  .conf-badge { text-transform: uppercase; font-size: .7rem; letter-spacing: .04em; }
-  .service.conf-confirmed .conf-badge { color: var(--conf-confirmed); }
-  .service.conf-predicted .conf-badge { color: var(--conf-predicted); }
-  .service.conf-unknown .conf-badge { color: var(--conf-unknown); }
-  .cancel { color: var(--stock-222); font-weight: 600; }
-  .empty { color: var(--muted); font-style: italic; }
-  .error {
-    background: color-mix(in srgb, var(--stock-222) 15%, transparent);
-    border: 1px solid var(--stock-222); color: var(--stock-222);
-    padding: .6rem .9rem; border-radius: 8px;
-  }
-  footer {
-    max-width: 960px; margin: 2rem auto 0; padding-top: 1rem;
-    color: var(--muted); font-size: .8rem;
-    border-top: 1px solid var(--border);
-  }
-  footer a { color: inherit; }
+  /* Filter: stock */
+  body[data-stock="810"] .service:not(.stock-810) { display: none; }
+  body[data-stock="222"] .service:not(.stock-222) { display: none; }
 </style>
 </head>
-<body data-date="today" data-direction="both" data-first="to-london">
-<header>
-  <h1>EMR Sheffield ↔ London</h1>
-</header>
-<nav class="controls" aria-label="Display controls">
-  <div class="control-group" role="tablist" aria-label="Date">
-    <button data-control="date" data-value="today">Today</button>
-    <button data-control="date" data-value="tomorrow">Tomorrow</button>
-  </div>
-  <div class="control-group" role="tablist" aria-label="Direction filter">
-    <button data-control="direction" data-value="both">Both</button>
-    <button data-control="direction" data-value="to-london">To London</button>
-    <button data-control="direction" data-value="to-sheffield">To Sheffield</button>
-  </div>
-  <div class="control-group" data-first-group role="tablist" aria-label="Order">
-    <button data-control="first" data-value="to-london">Sheff → London first</button>
-    <button data-control="first" data-value="to-sheffield">London → Sheff first</button>
-  </div>
-</nav>
-<main>
-  ${datePage("today", "Today", today)}
-  ${datePage("tomorrow", "Tomorrow", tomorrow)}
-</main>
-<footer>
-  Generated ${escapeHtml(generatedAt)} from
-  <a href="https://www.realtimetrains.co.uk/" target="_blank" rel="noopener">Realtime Trains</a>.
-  Stock predictions use CIF "Pathed as" power type; "confirmed" means Know Your Train formation data is available.
-</footer>
+<body data-date="today" data-direction="to-london" data-stock="all">
+<div class="wrap">
+  <div class="updated" title="Page generated ${escapeHtml(generatedAt)}">Updated ${escapeHtml(prettyTimestamp(generatedAt))}</div>
+  <header>
+    <h1>EMR · Sheffield ⇄ London</h1>
+    <div class="sub">Today and tomorrow, with Class 810 (Aurora) vs Class 222 (Meridian) identification.</div>
+  </header>
+  <nav class="controls" aria-label="Display controls">
+    <div class="seg" role="tablist" aria-label="Date">
+      <button data-control="date" data-value="today">Today</button>
+      <button data-control="date" data-value="tomorrow">Tomorrow</button>
+    </div>
+    <div class="seg" role="tablist" aria-label="Direction">
+      <button data-control="direction" data-value="to-london">Sheff → London</button>
+      <button data-control="direction" data-value="to-sheffield">London → Sheff</button>
+    </div>
+    <div class="seg" role="tablist" aria-label="Stock">
+      <button data-control="stock" data-value="all">All</button>
+      <button data-control="stock" data-value="810">Aurora</button>
+      <button data-control="stock" data-value="222">Meridian</button>
+    </div>
+  </nav>
+  <main>
+    ${datePage("today", "Today", today)}
+    ${datePage("tomorrow", "Tomorrow", tomorrow)}
+  </main>
+  <footer>
+    Data from <a href="https://www.realtimetrains.co.uk/" target="_blank" rel="noopener">Realtime Trains</a>.
+  </footer>
+</div>
 <script>
 (function () {
-  var keys = ["date", "direction", "first"];
-  var defaults = { date: "today", direction: "both", first: "to-london" };
+  var keys = ["date", "direction", "stock"];
+  var defaults = { date: "today", direction: "to-london", stock: "all" };
   var state = {};
   keys.forEach(function (k) {
     var v = null;
@@ -498,8 +644,9 @@ function renderHtml(today, tomorrow, generatedAt) {
     keys.forEach(function (k) {
       document.body.setAttribute("data-" + k, state[k]);
       document.querySelectorAll('[data-control="' + k + '"]').forEach(function (btn) {
-        btn.classList.toggle("active", btn.getAttribute("data-value") === state[k]);
-        btn.setAttribute("aria-selected", btn.getAttribute("data-value") === state[k] ? "true" : "false");
+        var on = btn.getAttribute("data-value") === state[k];
+        btn.classList.toggle("active", on);
+        btn.setAttribute("aria-selected", on ? "true" : "false");
       });
     });
   }

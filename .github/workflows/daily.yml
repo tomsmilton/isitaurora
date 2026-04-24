@@ -1,10 +1,11 @@
 name: Daily train report
 
 on:
-  # 02:00 UTC every day. UK winter = 02:00 local, UK summer = 03:00 local.
-  # Tweak the cron expression if you want a different local time.
+  # Aligned to UK summer time (BST, UTC+1): fires at 06, 08, 10, 15, 17, 19, 22 UK local.
+  # In UK winter (GMT), these fire one hour earlier (05, 07, 09, 14, 16, 18, 21 local)
+  # because cron runs in UTC and can't handle DST. Shift if you care.
   schedule:
-    - cron: "0 2 * * *"
+    - cron: "0 5,7,9,14,16,18,21 * * *"
   workflow_dispatch:
 
 permissions:

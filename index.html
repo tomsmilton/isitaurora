@@ -3,207 +3,339 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>EMR Sheffield ↔ London</title>
+<title>EMR Sheffield ⇄ London</title>
 <style>
   :root {
     color-scheme: light dark;
-    --bg: #f7f7f8;
-    --fg: #111;
-    --muted: #666;
-    --card: #fff;
-    --border: #e3e3e8;
-    --accent: #0f172a;
-    --stock-810: #2563eb;
-    --stock-222: #dc2626;
-    --stock-unknown: #6b7280;
-    --conf-confirmed: #059669;
-    --conf-predicted: #d97706;
-    --conf-unknown: #6b7280;
+    --bg: #F5F3EC;
+    --surface: #FAF8F1;
+    --surface-alt: #EAE7DB;
+    --fg: #141413;
+    --muted: #6B6A63;
+    --subtle: #9A988F;
+    --border: #E0DCCC;
+    --border-strong: #C5C1AE;
+    --ok: #5B8A4A;
+    --warn: #B8882F;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #0f0f12;
-      --fg: #e8e8ea;
-      --muted: #9a9aa2;
-      --card: #181820;
-      --border: #2a2a33;
-      --accent: #e8e8ea;
+      --bg: #1A1916;
+      --surface: #22201C;
+      --surface-alt: #2C2A24;
+      --fg: #EDEBE3;
+      --muted: #9F9D94;
+      --subtle: #6F6E66;
+      --border: #302E27;
+      --border-strong: #46443C;
+      --ok: #84A878;
+      --warn: #D9A444;
     }
   }
   * { box-sizing: border-box; }
+  html, body { background: var(--bg); }
   body {
-    margin: 0; padding: 0 1rem 3rem;
-    background: var(--bg); color: var(--fg);
-    font: 15px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    padding: 0 20px 80px;
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, "Segoe UI", Roboto, sans-serif;
+    color: var(--fg);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-  header {
-    max-width: 960px; margin: 0 auto; padding: 2rem 0 1rem;
+  .wrap { max-width: 960px; margin: 0 auto; position: relative; }
+  .updated {
+    position: absolute;
+    top: 20px; right: 0;
+    font-size: 11px;
+    color: var(--subtle);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    display: inline-flex; align-items: center; gap: 6px;
   }
-  header h1 { margin: 0; font-size: 1.5rem; }
+  .updated::before {
+    content: "";
+    width: 6px; height: 6px; border-radius: 999px;
+    background: var(--ok);
+    opacity: 0.7;
+  }
+  header { padding: 56px 0 28px; }
+  header h1 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    color: var(--fg);
+  }
+  header .sub {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 2px;
+  }
+
   .controls {
     position: sticky; top: 0; z-index: 10;
-    max-width: 960px; margin: 0 auto;
-    padding: .75rem 0;
-    background: color-mix(in srgb, var(--bg) 85%, transparent);
-    backdrop-filter: blur(8px);
+    padding: 10px 0;
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    backdrop-filter: saturate(160%) blur(10px);
+    -webkit-backdrop-filter: saturate(160%) blur(10px);
     border-bottom: 1px solid var(--border);
-    display: flex; flex-wrap: wrap; gap: .5rem 1rem;
+    display: flex; flex-wrap: wrap; gap: 8px;
   }
-  .control-group {
-    display: inline-flex; border: 1px solid var(--border);
-    border-radius: 8px; overflow: hidden;
-    background: var(--card);
+  .seg {
+    display: inline-flex;
+    background: var(--surface-alt);
+    border-radius: 8px;
+    padding: 2px;
   }
-  .control-group button {
+  .seg button {
     appearance: none; border: 0; background: transparent;
-    color: var(--muted); font: inherit; font-size: .85rem;
-    padding: .4rem .7rem; cursor: pointer;
-    border-right: 1px solid var(--border);
+    color: var(--muted);
+    font: inherit; font-size: 13px; font-weight: 500;
+    padding: 5px 11px; border-radius: 6px;
+    cursor: pointer;
+    transition: color 120ms ease, background 120ms ease;
   }
-  .control-group button:last-child { border-right: 0; }
-  .control-group button:hover { color: var(--fg); }
-  .control-group button.active {
-    background: var(--accent); color: var(--bg); font-weight: 500;
+  .seg button:hover { color: var(--fg); }
+  .seg button.active {
+    background: var(--surface);
+    color: var(--fg);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 0 0 0.5px rgba(0,0,0,0.06);
   }
-  .control-label {
-    font-size: .75rem; color: var(--muted);
-    align-self: center; letter-spacing: .04em; text-transform: uppercase;
+  @media (prefers-color-scheme: dark) {
+    .seg button.active { box-shadow: 0 0 0 1px var(--border-strong); }
   }
-  main { max-width: 960px; margin: 0 auto; }
+
+  main { display: flex; flex-direction: column; }
+
   .date-section {
-    display: flex; flex-direction: column; gap: 2rem;
-    margin-top: 2rem;
+    display: flex; flex-direction: column; gap: 44px;
+    padding: 40px 0 0;
   }
   .date-heading {
-    margin: 0; font-size: 1.15rem; color: var(--muted); font-weight: 500;
+    margin: 0;
+    display: flex; align-items: baseline; gap: 10px;
   }
-  section h3 { margin: 0 0 .5rem; font-size: 1.05rem; }
+  .date-label {
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--subtle);
+  }
+  .date-long {
+    font-size: 13px; color: var(--muted);
+  }
 
-  /* Order by "first direction" selection */
-  [data-direction-section="to-london"] { order: 1; }
-  [data-direction-section="to-sheffield"] { order: 2; }
-  body[data-first="to-sheffield"] [data-direction-section="to-sheffield"] { order: 1; }
-  body[data-first="to-sheffield"] [data-direction-section="to-london"] { order: 2; }
+  section h3 {
+    margin: 0 0 10px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--fg);
+  }
 
-  /* Date tabs: show one */
+  .summary {
+    display: flex; flex-wrap: wrap; gap: 4px 14px;
+    margin: 0 0 16px;
+    font-size: 12px; color: var(--muted);
+  }
+  .summary .stat { display: inline-flex; align-items: center; }
+  .summary .stat.muted { color: var(--subtle); }
+  .dot {
+    display: inline-block; width: 6px; height: 6px;
+    border-radius: 999px; margin-right: 6px;
+    background: var(--border-strong);
+  }
+  .dot.stock-810 {
+    background: #FFFFFF;
+    box-shadow: inset 0 0 0 1px var(--border-strong);
+  }
+  .dot.stock-222 { background: #141413; }
+  @media (prefers-color-scheme: dark) {
+    .dot.stock-810 {
+      background: #EDEBE3;
+      box-shadow: none;
+    }
+    .dot.stock-222 {
+      background: #0A0908;
+      box-shadow: inset 0 0 0 1px var(--border);
+    }
+  }
+
+  .services {
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .service {
+    display: block; text-decoration: none;
+    color: var(--fg);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    transition: border-color 120ms ease, transform 80ms ease;
+  }
+  /* Aurora = light, clean. Meridian = warm stone, a half-step darker than page. */
+  .service.stock-810 {
+    background: #FFFFFF;
+    border-color: #E0DCCC;
+  }
+  .service.stock-222 {
+    background: #DCD6C2;
+    border-color: #C9C2A8;
+  }
+  @media (prefers-color-scheme: dark) {
+    .service.stock-810 {
+      background: #EDEBE3;
+      border-color: #EDEBE3;
+      --fg: #141413;
+      --muted: #6B6A63;
+      --subtle: #9A988F;
+      --border-strong: #C5C1AE;
+    }
+    .service.stock-222 {
+      background: #13110F;
+      border-color: #2A2822;
+    }
+  }
+  a.service:hover { border-color: var(--border-strong); }
+  a.service.stock-810:hover { border-color: #C5C1AE; }
+  a.service.stock-222:hover { border-color: #B5AD90; }
+  @media (prefers-color-scheme: dark) {
+    a.service.stock-810:hover { border-color: #D6D2C2; }
+    a.service.stock-222:hover { border-color: #3A382F; }
+  }
+  a.service:active { transform: translateY(0.5px); }
+
+  .times {
+    display: flex; align-items: baseline; gap: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+  .times .dep {
+    font-size: 17px; font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  .times .arrow { color: var(--subtle); font-size: 12px; }
+  .times .arr { color: var(--muted); font-size: 13px; }
+  .times .cancel-tag {
+    margin-left: auto;
+    color: var(--warn);
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 0.04em; text-transform: uppercase;
+  }
+
+  .route {
+    color: var(--muted); font-size: 12px;
+    margin: 2px 0 10px;
+  }
+
+  .meta {
+    display: flex; flex-wrap: wrap; align-items: center;
+    gap: 4px 12px;
+    font-size: 12px;
+  }
+  .meta .stock { font-weight: 500; color: var(--fg); }
+  .service.stock-unknown .meta .stock { color: var(--muted); font-weight: 400; }
+
+  .meta .conf {
+    font-size: 10px; font-weight: 500;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--subtle);
+    display: inline-flex; align-items: center;
+  }
+  .meta .conf::before {
+    content: ""; display: inline-block;
+    width: 5px; height: 5px; border-radius: 999px;
+    background: var(--border-strong); margin-right: 5px;
+  }
+  .service.conf-confirmed .meta .conf::before { background: var(--ok); }
+  .service.conf-predicted .meta .conf::before { background: var(--warn); }
+
+  .meta .chips { color: var(--muted); }
+
+  .service.cancelled .times .dep,
+  .service.cancelled .times .arr,
+  .service.cancelled .route,
+  .service.cancelled .meta .stock,
+  .service.cancelled .meta .chips {
+    opacity: 0.45;
+  }
+
+  .empty { color: var(--muted); font-size: 13px; margin: 0; }
+  .error {
+    background: color-mix(in srgb, var(--warn) 8%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--warn) 28%, var(--border));
+    color: var(--warn);
+    padding: 10px 14px; border-radius: 8px; font-size: 13px;
+  }
+
+  footer {
+    margin-top: 72px; padding-top: 20px;
+    border-top: 1px solid var(--border);
+    color: var(--subtle); font-size: 12px;
+  }
+  footer a { color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
+  footer a:hover { color: var(--fg); }
+
+  /* Filter: date */
   body[data-date="today"] [data-date-section="tomorrow"] { display: none; }
   body[data-date="tomorrow"] [data-date-section="today"] { display: none; }
 
-  /* Direction filter: hide the non-selected one (both = show both) */
+  /* Filter: direction — always one at a time */
   body[data-direction="to-london"] [data-direction-section="to-sheffield"] { display: none; }
   body[data-direction="to-sheffield"] [data-direction-section="to-london"] { display: none; }
 
-  /* "First" control is meaningless when only one direction is visible */
-  body[data-direction="to-london"] [data-first-group],
-  body[data-direction="to-sheffield"] [data-first-group] {
-    opacity: .4; pointer-events: none;
-  }
-
-  .summary { color: var(--muted); margin: 0 0 1rem; font-size: .9rem; }
-  .pill {
-    display: inline-block; padding: .1rem .5rem; border-radius: 999px;
-    font-size: .8rem; font-weight: 500; margin-right: .25rem;
-    border: 1px solid var(--border);
-  }
-  .pill.stock-810 { color: var(--stock-810); border-color: var(--stock-810); }
-  .pill.stock-222 { color: var(--stock-222); border-color: var(--stock-222); }
-  .pill.stock-unknown { color: var(--stock-unknown); }
-  .services {
-    display: grid; gap: .6rem;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  }
-  .service {
-    display: block; text-decoration: none; color: inherit;
-    background: var(--card); border: 1px solid var(--border);
-    border-left: 4px solid var(--stock-unknown);
-    padding: .75rem .9rem; border-radius: 8px;
-    transition: border-color .15s, transform .05s;
-  }
-  a.service:hover { border-color: var(--fg); }
-  a.service:active { transform: translateY(1px); }
-  .service.stock-810 { border-left-color: var(--stock-810); }
-  .service.stock-222 { border-left-color: var(--stock-222); }
-  .service.cancelled { opacity: .55; text-decoration: line-through; }
-  .times {
-    font-variant-numeric: tabular-nums;
-    font-size: 1.1rem; font-weight: 600;
-    display: flex; gap: .5rem; align-items: center;
-  }
-  .arrow { color: var(--muted); font-weight: 400; }
-  .route { color: var(--muted); font-size: .85rem; margin: .15rem 0 .5rem; }
-  .meta { display: flex; flex-wrap: wrap; gap: .35rem; font-size: .8rem; }
-  .meta span {
-    padding: .1rem .45rem; border-radius: 4px;
-    background: color-mix(in srgb, var(--fg) 7%, transparent);
-  }
-  .stock-badge { font-weight: 500; }
-  .service.stock-810 .stock-badge { color: var(--stock-810); }
-  .service.stock-222 .stock-badge { color: var(--stock-222); }
-  .conf-badge { text-transform: uppercase; font-size: .7rem; letter-spacing: .04em; }
-  .service.conf-confirmed .conf-badge { color: var(--conf-confirmed); }
-  .service.conf-predicted .conf-badge { color: var(--conf-predicted); }
-  .service.conf-unknown .conf-badge { color: var(--conf-unknown); }
-  .cancel { color: var(--stock-222); font-weight: 600; }
-  .empty { color: var(--muted); font-style: italic; }
-  .error {
-    background: color-mix(in srgb, var(--stock-222) 15%, transparent);
-    border: 1px solid var(--stock-222); color: var(--stock-222);
-    padding: .6rem .9rem; border-radius: 8px;
-  }
-  footer {
-    max-width: 960px; margin: 2rem auto 0; padding-top: 1rem;
-    color: var(--muted); font-size: .8rem;
-    border-top: 1px solid var(--border);
-  }
-  footer a { color: inherit; }
+  /* Filter: stock */
+  body[data-stock="810"] .service:not(.stock-810) { display: none; }
+  body[data-stock="222"] .service:not(.stock-222) { display: none; }
 </style>
 </head>
-<body data-date="today" data-direction="both" data-first="to-london">
-<header>
-  <h1>EMR Sheffield ↔ London</h1>
-</header>
-<nav class="controls" aria-label="Display controls">
-  <div class="control-group" role="tablist" aria-label="Date">
-    <button data-control="date" data-value="today">Today</button>
-    <button data-control="date" data-value="tomorrow">Tomorrow</button>
-  </div>
-  <div class="control-group" role="tablist" aria-label="Direction filter">
-    <button data-control="direction" data-value="both">Both</button>
-    <button data-control="direction" data-value="to-london">To London</button>
-    <button data-control="direction" data-value="to-sheffield">To Sheffield</button>
-  </div>
-  <div class="control-group" data-first-group role="tablist" aria-label="Order">
-    <button data-control="first" data-value="to-london">Sheff → London first</button>
-    <button data-control="first" data-value="to-sheffield">London → Sheff first</button>
-  </div>
-</nav>
-<main>
-  <div data-date-section="today" class="date-section">
-    <h2 class="date-heading">Today — Friday, 24 April 2026</h2>
+<body data-date="today" data-direction="to-london" data-stock="all">
+<div class="wrap">
+  <div class="updated" title="Page generated 2026-04-24T22:06:36.201Z">Updated Fri 24 Apr, 22:06 UTC</div>
+  <header>
+    <h1>EMR · Sheffield ⇄ London</h1>
+    <div class="sub">Today and tomorrow, with Class 810 (Aurora) vs Class 222 (Meridian) identification.</div>
+  </header>
+  <nav class="controls" aria-label="Display controls">
+    <div class="seg" role="tablist" aria-label="Date">
+      <button data-control="date" data-value="today">Today</button>
+      <button data-control="date" data-value="tomorrow">Tomorrow</button>
+    </div>
+    <div class="seg" role="tablist" aria-label="Direction">
+      <button data-control="direction" data-value="to-london">Sheff → London</button>
+      <button data-control="direction" data-value="to-sheffield">London → Sheff</button>
+    </div>
+    <div class="seg" role="tablist" aria-label="Stock">
+      <button data-control="stock" data-value="all">All</button>
+      <button data-control="stock" data-value="810">Aurora</button>
+      <button data-control="stock" data-value="222">Meridian</button>
+    </div>
+  </nav>
+  <main>
+    <div data-date-section="today" class="date-section">
+    <p class="date-heading">
+      <span class="date-label">Today</span>
+      <span class="date-long">Friday 24 April</span>
+    </p>
     
     
     <section data-direction-section="to-london">
     <h3>Sheffield → London St Pancras</h3>
-    <p class="summary">
-           33 services ·
-           <span class="pill stock-810">10 Class 810</span>
-           <span class="pill stock-222">23 Class 222</span>
-           <span class="pill stock-unknown">0 unknown</span>
-         </p>
+    <div class="summary">
+           <span>33 services</span>
+           <span class="stat"><i class="dot stock-810"></i>10 Aurora</span>
+           <span class="stat"><i class="dot stock-222"></i>23 Meridian</span>
+           
+         </div>
          <div class="services"><a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:C51624/2026-04-24/detailed" target="_blank" rel="noopener">
     <div class="times">
       <span class="dep">04:50</span>
       <span class="arrow">→</span>
       <span class="arr">07:07</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 5</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 5</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:C51655/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -211,15 +343,13 @@
       <span class="dep">05:30</span>
       <span class="arrow">→</span>
       <span class="arr">07:39</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 8B</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 8B</span>
     </div>
   </a>
 <a class="service stock-810 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:C51563/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -227,15 +357,13 @@
       <span class="dep">05:56</span>
       <span class="arrow">→</span>
       <span class="arr">08:08</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 810 Aurora</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 6</span>
-      
+      <span class="stock">Aurora</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 6</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:C51627/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -243,15 +371,13 @@
       <span class="dep">06:30</span>
       <span class="arrow">→</span>
       <span class="arr">08:38</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 8</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 8</span>
     </div>
   </a>
 <a class="service stock-810 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12140/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -259,15 +385,13 @@
       <span class="dep">07:00</span>
       <span class="arrow">→</span>
       <span class="arr">09:09</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 810 Aurora</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Aurora</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 2</span>
     </div>
   </a>
 <a class="service stock-810 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12141/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -275,15 +399,13 @@
       <span class="dep">07:34</span>
       <span class="arrow">→</span>
       <span class="arr">09:39</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 810 Aurora</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 8A</span>
-      
+      <span class="stock">Aurora</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 8A</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12145/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -291,15 +413,13 @@
       <span class="dep">07:59</span>
       <span class="arrow">→</span>
       <span class="arr">10:09</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 2</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12147/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -307,15 +427,13 @@
       <span class="dep">08:35</span>
       <span class="arrow">→</span>
       <span class="arr">10:39</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 8</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 8</span>
     </div>
   </a>
 <a class="service stock-810 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:C51645/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -323,15 +441,13 @@
       <span class="dep">09:00</span>
       <span class="arrow">→</span>
       <span class="arr">11:09</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 810 Aurora</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 2A</span>
-      
+      <span class="stock">Aurora</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 2A</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12151/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -339,15 +455,13 @@
       <span class="dep">09:35</span>
       <span class="arrow">→</span>
       <span class="arr">11:36</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 8</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 8</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12153/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -355,15 +469,13 @@
       <span class="dep">10:00</span>
       <span class="arrow">→</span>
       <span class="arr">12:09</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 2</span>
     </div>
   </a>
 <a class="service stock-810 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:C51596/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -371,15 +483,13 @@
       <span class="dep">10:35</span>
       <span class="arrow">→</span>
       <span class="arr">12:39</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 810 Aurora</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 8</span>
-      
+      <span class="stock">Aurora</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 8</span>
     </div>
   </a>
 <a class="service stock-810 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:C51613/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -387,15 +497,13 @@
       <span class="dep">11:00</span>
       <span class="arrow">→</span>
       <span class="arr">13:07</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 810 Aurora</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Aurora</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 2</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:C51678/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -403,15 +511,13 @@
       <span class="dep">11:35</span>
       <span class="arrow">→</span>
       <span class="arr">13:39</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 8</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 8</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12161/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -419,15 +525,13 @@
       <span class="dep">12:00</span>
       <span class="arrow">→</span>
       <span class="arr">14:09</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 2A</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 2A</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:C51677/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -435,15 +539,13 @@
       <span class="dep">12:35</span>
       <span class="arrow">→</span>
       <span class="arr">14:39</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 7</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 7</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12165/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -451,15 +553,13 @@
       <span class="dep">13:00</span>
       <span class="arrow">→</span>
       <span class="arr">15:09</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 5A</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 5A</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12168/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -467,15 +567,13 @@
       <span class="dep">13:35</span>
       <span class="arrow">→</span>
       <span class="arr">15:39</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 8</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 8</span>
     </div>
   </a>
 <a class="service stock-810 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:C51598/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -483,15 +581,13 @@
       <span class="dep">14:00</span>
       <span class="arrow">→</span>
       <span class="arr">16:09</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 810 Aurora</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Aurora</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 2</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12171/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -499,15 +595,13 @@
       <span class="dep">14:35</span>
       <span class="arrow">→</span>
       <span class="arr">16:39</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 8</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 8</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:C51651/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -515,15 +609,13 @@
       <span class="dep">15:00</span>
       <span class="arrow">→</span>
       <span class="arr">17:09</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 2</span>
     </div>
   </a>
 <a class="service stock-810 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:C51694/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -531,15 +623,13 @@
       <span class="dep">15:35</span>
       <span class="arrow">→</span>
       <span class="arr">17:39</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 810 Aurora</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 8</span>
-      
+      <span class="stock">Aurora</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 8</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12175/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -547,15 +637,13 @@
       <span class="dep">16:00</span>
       <span class="arrow">→</span>
       <span class="arr">18:10</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 2</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:C51702/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -563,15 +651,13 @@
       <span class="dep">16:35</span>
       <span class="arrow">→</span>
       <span class="arr">18:41</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 8</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 8</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:C51680/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -579,15 +665,13 @@
       <span class="dep">17:00</span>
       <span class="arrow">→</span>
       <span class="arr">19:10</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 2A</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 2A</span>
     </div>
   </a>
 <a class="service stock-810 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12178/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -595,15 +679,13 @@
       <span class="dep">17:32</span>
       <span class="arrow">→</span>
       <span class="arr">19:39</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 810 Aurora</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 8</span>
-      
+      <span class="stock">Aurora</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 8</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:C52148/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -611,15 +693,13 @@
       <span class="dep">18:00</span>
       <span class="arrow">→</span>
       <span class="arr">20:07</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 2A</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 2A</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:C51643/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -627,15 +707,13 @@
       <span class="dep">18:35</span>
       <span class="arrow">→</span>
       <span class="arr">20:36</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 8A</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 8A</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:C52322/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -643,15 +721,13 @@
       <span class="dep">19:00</span>
       <span class="arrow">→</span>
       <span class="arr">21:08</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 8B</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 8B</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:C52201/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -659,15 +735,13 @@
       <span class="dep">19:35</span>
       <span class="arrow">→</span>
       <span class="arr">21:38</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 7</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 7</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:C51601/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -675,15 +749,13 @@
       <span class="dep">20:00</span>
       <span class="arrow">→</span>
       <span class="arr">22:07</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 6</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 6</span>
     </div>
   </a>
 <a class="service stock-810 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12185/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -691,15 +763,13 @@
       <span class="dep">21:00</span>
       <span class="arrow">→</span>
       <span class="arr">23:16</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 810 Aurora</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 2A</span>
-      
+      <span class="stock">Aurora</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 2A</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:C52164/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -707,40 +777,36 @@
       <span class="dep">21:45</span>
       <span class="arrow">→</span>
       <span class="arr">00:23</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">10 coaches</span>
-      
-      <span class="platform">Plat 8</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">10 coaches · Plat 8</span>
     </div>
   </a></div>
   </section>
     <section data-direction-section="to-sheffield">
     <h3>London St Pancras → Sheffield</h3>
-    <p class="summary">
-           33 services ·
-           <span class="pill stock-810">9 Class 810</span>
-           <span class="pill stock-222">24 Class 222</span>
-           <span class="pill stock-unknown">0 unknown</span>
-         </p>
+    <div class="summary">
+           <span>33 services</span>
+           <span class="stat"><i class="dot stock-810"></i>9 Aurora</span>
+           <span class="stat"><i class="dot stock-222"></i>24 Meridian</span>
+           
+         </div>
          <div class="services"><a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:C52115/2026-04-24/detailed" target="_blank" rel="noopener">
     <div class="times">
       <span class="dep">05:27</span>
       <span class="arrow">→</span>
       <span class="arr">07:42</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 4</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:C51957/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -748,15 +814,13 @@
       <span class="dep">05:59</span>
       <span class="arrow">→</span>
       <span class="arr">08:03</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 3</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 3</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12250/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -764,15 +828,13 @@
       <span class="dep">07:02</span>
       <span class="arrow">→</span>
       <span class="arr">09:06</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 4</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12252/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -780,15 +842,13 @@
       <span class="dep">07:30</span>
       <span class="arrow">→</span>
       <span class="arr">09:42</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 4</span>
     </div>
   </a>
 <a class="service stock-810 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:C52102/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -796,15 +856,13 @@
       <span class="dep">08:03</span>
       <span class="arrow">→</span>
       <span class="arr">10:04</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 810 Aurora</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 3</span>
-      
+      <span class="stock">Aurora</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 3</span>
     </div>
   </a>
 <a class="service stock-810 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:C51710/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -812,15 +870,13 @@
       <span class="dep">08:32</span>
       <span class="arrow">→</span>
       <span class="arr">10:42</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 810 Aurora</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 3</span>
-      
+      <span class="stock">Aurora</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 3</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12257/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -828,15 +884,13 @@
       <span class="dep">09:02</span>
       <span class="arrow">→</span>
       <span class="arr">11:04</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 3</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 3</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12260/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -844,15 +898,13 @@
       <span class="dep">09:32</span>
       <span class="arrow">→</span>
       <span class="arr">11:41</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 2</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12263/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -860,15 +912,13 @@
       <span class="dep">10:02</span>
       <span class="arrow">→</span>
       <span class="arr">12:05</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 4</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12265/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -876,15 +926,13 @@
       <span class="dep">10:32</span>
       <span class="arrow">→</span>
       <span class="arr">12:44</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 4</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12268/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -892,15 +940,13 @@
       <span class="dep">11:02</span>
       <span class="arrow">→</span>
       <span class="arr">13:01</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 2</span>
     </div>
   </a>
 <a class="service stock-810 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12271/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -908,15 +954,13 @@
       <span class="dep">11:32</span>
       <span class="arrow">→</span>
       <span class="arr">13:41</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 810 Aurora</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 3</span>
-      
+      <span class="stock">Aurora</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 3</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12273/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -924,15 +968,13 @@
       <span class="dep">12:02</span>
       <span class="arrow">→</span>
       <span class="arr">14:04</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 4</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12275/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -940,15 +982,13 @@
       <span class="dep">12:32</span>
       <span class="arrow">→</span>
       <span class="arr">14:41</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 3</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 3</span>
     </div>
   </a>
 <a class="service stock-810 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12278/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -956,15 +996,13 @@
       <span class="dep">13:02</span>
       <span class="arrow">→</span>
       <span class="arr">15:04</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 810 Aurora</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 3</span>
-      
+      <span class="stock">Aurora</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 3</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12280/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -972,15 +1010,13 @@
       <span class="dep">13:32</span>
       <span class="arrow">→</span>
       <span class="arr">15:44</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 2</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:C51693/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -988,15 +1024,13 @@
       <span class="dep">14:02</span>
       <span class="arrow">→</span>
       <span class="arr">16:04</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 3</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 3</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12284/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -1004,15 +1038,13 @@
       <span class="dep">14:32</span>
       <span class="arrow">→</span>
       <span class="arr">16:41</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 4</span>
     </div>
   </a>
 <a class="service stock-810 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:C52126/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -1020,15 +1052,13 @@
       <span class="dep">15:02</span>
       <span class="arrow">→</span>
       <span class="arr">17:04</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 810 Aurora</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Aurora</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 2</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12287/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -1036,15 +1066,13 @@
       <span class="dep">15:31</span>
       <span class="arrow">→</span>
       <span class="arr">17:43</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 4</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12291/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -1052,15 +1080,13 @@
       <span class="dep">16:02</span>
       <span class="arrow">→</span>
       <span class="arr">18:04</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">10 coaches</span>
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">10 coaches · Plat 2</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:C52477/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -1068,15 +1094,13 @@
       <span class="dep">16:32</span>
       <span class="arrow">→</span>
       <span class="arr">18:51</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 2</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:C52106/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -1084,15 +1108,13 @@
       <span class="dep">17:02</span>
       <span class="arrow">→</span>
       <span class="arr">19:17</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 3</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 3</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12297/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -1100,15 +1122,13 @@
       <span class="dep">17:32</span>
       <span class="arrow">→</span>
       <span class="arr">19:47</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 3</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 3</span>
     </div>
   </a>
 <a class="service stock-810 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12299/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -1116,15 +1136,13 @@
       <span class="dep">18:02</span>
       <span class="arrow">→</span>
       <span class="arr">20:02</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 810 Aurora</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Aurora</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 4</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12300/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -1132,15 +1150,13 @@
       <span class="dep">18:32</span>
       <span class="arrow">→</span>
       <span class="arr">20:47</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 2</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:C52095/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -1148,15 +1164,13 @@
       <span class="dep">19:02</span>
       <span class="arrow">→</span>
       <span class="arr">21:18</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">10 coaches</span>
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">10 coaches · Plat 4</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted cancelled" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12303/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -1164,15 +1178,13 @@
       <span class="dep">19:32</span>
       <span class="arrow">→</span>
       <span class="arr">21:44</span>
+      <span class="cancel-tag">Cancelled</span>
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 4</span>
-      <span class="cancel">CANCELLED</span>
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 4</span>
     </div>
   </a>
 <a class="service stock-810 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12305/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -1180,15 +1192,13 @@
       <span class="dep">20:02</span>
       <span class="arrow">→</span>
       <span class="arr">22:03</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 810 Aurora</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Aurora</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 4</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12306/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -1196,15 +1206,13 @@
       <span class="dep">20:32</span>
       <span class="arrow">→</span>
       <span class="arr">22:41</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 4</span>
     </div>
   </a>
 <a class="service stock-222 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12307/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -1212,15 +1220,13 @@
       <span class="dep">21:02</span>
       <span class="arrow">→</span>
       <span class="arr">23:00</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 2</span>
     </div>
   </a>
 <a class="service stock-810 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12309/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -1228,15 +1234,13 @@
       <span class="dep">21:32</span>
       <span class="arrow">→</span>
       <span class="arr">23:41</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 810 Aurora</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 3</span>
-      
+      <span class="stock">Aurora</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 3</span>
     </div>
   </a>
 <a class="service stock-810 conf-confirmed" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12311/2026-04-24/detailed" target="_blank" rel="noopener">
@@ -1244,45 +1248,44 @@
       <span class="dep">22:32</span>
       <span class="arrow">→</span>
       <span class="arr">00:39</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 810 Aurora</span>
-      <span class="conf-badge">confirmed</span>
-      <span class="coaches">5 coaches</span>
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Aurora</span>
+      <span class="conf">confirmed</span>
+      <span class="chips">5 coaches · Plat 2</span>
     </div>
   </a></div>
   </section>
   </div>
-  <div data-date-section="tomorrow" class="date-section">
-    <h2 class="date-heading">Tomorrow — Saturday, 25 April 2026</h2>
+    <div data-date-section="tomorrow" class="date-section">
+    <p class="date-heading">
+      <span class="date-label">Tomorrow</span>
+      <span class="date-long">Saturday 25 April</span>
+    </p>
     
     
     <section data-direction-section="to-london">
     <h3>Sheffield → London St Pancras</h3>
-    <p class="summary">
-           30 services ·
-           <span class="pill stock-810">8 Class 810</span>
-           <span class="pill stock-222">22 Class 222</span>
-           <span class="pill stock-unknown">0 unknown</span>
-         </p>
+    <div class="summary">
+           <span>30 services</span>
+           <span class="stat"><i class="dot stock-810"></i>8 Aurora</span>
+           <span class="stat"><i class="dot stock-222"></i>22 Meridian</span>
+           
+         </div>
          <div class="services"><a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:C52198/2026-04-25/detailed" target="_blank" rel="noopener">
     <div class="times">
       <span class="dep">05:30</span>
       <span class="arrow">→</span>
       <span class="arr">07:36</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 8</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 8</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:C52171/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1290,15 +1293,13 @@
       <span class="dep">05:56</span>
       <span class="arrow">→</span>
       <span class="arr">08:09</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 8A</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 8A</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:C52180/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1306,15 +1307,13 @@
       <span class="dep">06:33</span>
       <span class="arrow">→</span>
       <span class="arr">08:36</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 5A</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 5A</span>
     </div>
   </a>
 <a class="service stock-810 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:C52221/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1322,15 +1321,13 @@
       <span class="dep">07:00</span>
       <span class="arrow">→</span>
       <span class="arr">09:07</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 810 Aurora</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 8A</span>
-      
+      <span class="stock">Aurora</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 8A</span>
     </div>
   </a>
 <a class="service stock-810 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12143/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1338,15 +1335,13 @@
       <span class="dep">07:31</span>
       <span class="arrow">→</span>
       <span class="arr">09:36</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 810 Aurora</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 6</span>
-      
+      <span class="stock">Aurora</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 6</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:C52178/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1354,15 +1349,13 @@
       <span class="dep">08:00</span>
       <span class="arrow">→</span>
       <span class="arr">10:07</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 8</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 8</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12148/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1370,15 +1363,13 @@
       <span class="dep">08:32</span>
       <span class="arrow">→</span>
       <span class="arr">10:39</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 2</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12150/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1386,15 +1377,13 @@
       <span class="dep">09:00</span>
       <span class="arrow">→</span>
       <span class="arr">11:09</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 2</span>
     </div>
   </a>
 <a class="service stock-810 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12152/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1402,15 +1391,13 @@
       <span class="dep">09:35</span>
       <span class="arrow">→</span>
       <span class="arr">11:39</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 810 Aurora</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 6</span>
-      
+      <span class="stock">Aurora</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 6</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12154/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1418,15 +1405,13 @@
       <span class="dep">10:00</span>
       <span class="arrow">→</span>
       <span class="arr">12:09</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 2</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12156/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1434,15 +1419,13 @@
       <span class="dep">10:35</span>
       <span class="arrow">→</span>
       <span class="arr">12:39</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 8</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 8</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12158/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1450,15 +1433,13 @@
       <span class="dep">11:00</span>
       <span class="arrow">→</span>
       <span class="arr">13:09</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 2</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12159/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1466,15 +1447,13 @@
       <span class="dep">11:35</span>
       <span class="arrow">→</span>
       <span class="arr">13:36</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 8</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 8</span>
     </div>
   </a>
 <a class="service stock-810 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12162/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1482,15 +1461,13 @@
       <span class="dep">12:00</span>
       <span class="arrow">→</span>
       <span class="arr">14:08</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 810 Aurora</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Aurora</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 2</span>
     </div>
   </a>
 <a class="service stock-810 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12164/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1498,15 +1475,13 @@
       <span class="dep">12:35</span>
       <span class="arrow">→</span>
       <span class="arr">14:36</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 810 Aurora</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 7</span>
-      
+      <span class="stock">Aurora</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 7</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12166/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1514,15 +1489,13 @@
       <span class="dep">13:00</span>
       <span class="arrow">→</span>
       <span class="arr">15:07</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 2</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12169/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1530,15 +1503,13 @@
       <span class="dep">13:35</span>
       <span class="arrow">→</span>
       <span class="arr">15:36</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 8</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 8</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12170/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1546,15 +1517,13 @@
       <span class="dep">14:00</span>
       <span class="arrow">→</span>
       <span class="arr">16:09</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 2</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12172/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1562,15 +1531,13 @@
       <span class="dep">14:35</span>
       <span class="arrow">→</span>
       <span class="arr">16:36</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 8</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 8</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12173/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1578,15 +1545,13 @@
       <span class="dep">15:00</span>
       <span class="arrow">→</span>
       <span class="arr">17:09</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 2</span>
     </div>
   </a>
 <a class="service stock-810 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12174/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1594,15 +1559,13 @@
       <span class="dep">15:35</span>
       <span class="arrow">→</span>
       <span class="arr">17:39</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 810 Aurora</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 8</span>
-      
+      <span class="stock">Aurora</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 8</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12176/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1610,15 +1573,13 @@
       <span class="dep">16:00</span>
       <span class="arrow">→</span>
       <span class="arr">18:09</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 2</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12177/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1626,15 +1587,13 @@
       <span class="dep">16:35</span>
       <span class="arrow">→</span>
       <span class="arr">18:38</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 8</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 8</span>
     </div>
   </a>
 <a class="service stock-810 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:C52179/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1642,15 +1601,13 @@
       <span class="dep">17:00</span>
       <span class="arrow">→</span>
       <span class="arr">19:09</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 810 Aurora</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Aurora</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 2</span>
     </div>
   </a>
 <a class="service stock-810 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12179/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1658,15 +1615,13 @@
       <span class="dep">17:31</span>
       <span class="arrow">→</span>
       <span class="arr">19:36</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 810 Aurora</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 8</span>
-      
+      <span class="stock">Aurora</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 8</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:C52188/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1674,15 +1629,13 @@
       <span class="dep">18:00</span>
       <span class="arrow">→</span>
       <span class="arr">20:07</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 2</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12180/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1690,15 +1643,13 @@
       <span class="dep">18:35</span>
       <span class="arrow">→</span>
       <span class="arr">20:39</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 8</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 8</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12181/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1706,15 +1657,13 @@
       <span class="dep">19:00</span>
       <span class="arrow">→</span>
       <span class="arr">21:09</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 2</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12183/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1722,15 +1671,13 @@
       <span class="dep">19:35</span>
       <span class="arrow">→</span>
       <span class="arr">21:38</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 8</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 8</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12184/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1738,40 +1685,36 @@
       <span class="dep">20:00</span>
       <span class="arrow">→</span>
       <span class="arr">22:07</span>
+      
     </div>
     <div class="route">Sheffield → St Pancras International</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 2</span>
     </div>
   </a></div>
   </section>
     <section data-direction-section="to-sheffield">
     <h3>London St Pancras → Sheffield</h3>
-    <p class="summary">
-           33 services ·
-           <span class="pill stock-810">0 Class 810</span>
-           <span class="pill stock-222">33 Class 222</span>
-           <span class="pill stock-unknown">0 unknown</span>
-         </p>
+    <div class="summary">
+           <span>33 services</span>
+           <span class="stat"><i class="dot stock-810"></i>0 Aurora</span>
+           <span class="stat"><i class="dot stock-222"></i>33 Meridian</span>
+           
+         </div>
          <div class="services"><a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:C51985/2026-04-25/detailed" target="_blank" rel="noopener">
     <div class="times">
       <span class="dep">05:30</span>
       <span class="arrow">→</span>
       <span class="arr">07:43</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 4</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12247/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1779,15 +1722,13 @@
       <span class="dep">06:00</span>
       <span class="arrow">→</span>
       <span class="arr">08:07</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 3</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 3</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12249/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1795,15 +1736,13 @@
       <span class="dep">06:30</span>
       <span class="arrow">→</span>
       <span class="arr">08:43</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 4</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12251/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1811,15 +1750,13 @@
       <span class="dep">07:02</span>
       <span class="arrow">→</span>
       <span class="arr">09:04</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 2</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12253/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1827,15 +1764,13 @@
       <span class="dep">07:32</span>
       <span class="arrow">→</span>
       <span class="arr">09:42</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 3</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 3</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12254/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1843,15 +1778,13 @@
       <span class="dep">08:02</span>
       <span class="arrow">→</span>
       <span class="arr">10:04</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 4</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12256/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1859,15 +1792,13 @@
       <span class="dep">08:32</span>
       <span class="arrow">→</span>
       <span class="arr">10:41</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 4</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12259/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1875,15 +1806,13 @@
       <span class="dep">09:02</span>
       <span class="arrow">→</span>
       <span class="arr">11:04</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 4</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12261/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1891,15 +1820,13 @@
       <span class="dep">09:32</span>
       <span class="arrow">→</span>
       <span class="arr">11:41</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 3</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 3</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12264/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1907,15 +1834,13 @@
       <span class="dep">10:02</span>
       <span class="arrow">→</span>
       <span class="arr">12:05</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 4</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12266/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1923,15 +1848,13 @@
       <span class="dep">10:32</span>
       <span class="arrow">→</span>
       <span class="arr">12:41</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 3</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 3</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12269/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1939,15 +1862,13 @@
       <span class="dep">11:02</span>
       <span class="arrow">→</span>
       <span class="arr">13:04</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 3</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 3</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12272/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1955,15 +1876,13 @@
       <span class="dep">11:32</span>
       <span class="arrow">→</span>
       <span class="arr">13:41</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 4</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12274/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1971,15 +1890,13 @@
       <span class="dep">12:02</span>
       <span class="arrow">→</span>
       <span class="arr">14:04</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 4</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12276/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -1987,15 +1904,13 @@
       <span class="dep">12:32</span>
       <span class="arrow">→</span>
       <span class="arr">14:41</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 4</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12279/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -2003,15 +1918,13 @@
       <span class="dep">13:02</span>
       <span class="arrow">→</span>
       <span class="arr">15:04</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 3</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 3</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12281/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -2019,15 +1932,13 @@
       <span class="dep">13:32</span>
       <span class="arrow">→</span>
       <span class="arr">15:44</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 3</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 3</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12282/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -2035,15 +1946,13 @@
       <span class="dep">14:02</span>
       <span class="arrow">→</span>
       <span class="arr">16:04</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 4</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12285/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -2051,15 +1960,13 @@
       <span class="dep">14:32</span>
       <span class="arrow">→</span>
       <span class="arr">16:41</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 4</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12286/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -2067,15 +1974,13 @@
       <span class="dep">15:02</span>
       <span class="arrow">→</span>
       <span class="arr">17:04</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 4</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12288/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -2083,15 +1988,13 @@
       <span class="dep">15:32</span>
       <span class="arrow">→</span>
       <span class="arr">17:44</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 4</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12292/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -2099,15 +2002,13 @@
       <span class="dep">16:02</span>
       <span class="arrow">→</span>
       <span class="arr">18:04</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 4</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12293/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -2115,15 +2016,13 @@
       <span class="dep">16:32</span>
       <span class="arrow">→</span>
       <span class="arr">18:44</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 4</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12296/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -2131,15 +2030,13 @@
       <span class="dep">17:02</span>
       <span class="arrow">→</span>
       <span class="arr">19:04</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 4</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12298/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -2147,15 +2044,13 @@
       <span class="dep">17:32</span>
       <span class="arrow">→</span>
       <span class="arr">19:41</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 4</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:C51961/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -2163,15 +2058,13 @@
       <span class="dep">18:02</span>
       <span class="arrow">→</span>
       <span class="arr">19:59</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 4</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12301/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -2179,15 +2072,13 @@
       <span class="dep">18:32</span>
       <span class="arrow">→</span>
       <span class="arr">20:41</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 2</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12302/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -2195,15 +2086,13 @@
       <span class="dep">19:02</span>
       <span class="arrow">→</span>
       <span class="arr">21:01</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 3</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 3</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12304/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -2211,15 +2100,13 @@
       <span class="dep">19:32</span>
       <span class="arrow">→</span>
       <span class="arr">21:41</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 2</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:C52056/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -2227,15 +2114,13 @@
       <span class="dep">20:02</span>
       <span class="arrow">→</span>
       <span class="arr">22:02</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 4</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:C52069/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -2243,15 +2128,13 @@
       <span class="dep">20:32</span>
       <span class="arrow">→</span>
       <span class="arr">22:43</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 4</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12308/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -2259,15 +2142,13 @@
       <span class="dep">21:02</span>
       <span class="arrow">→</span>
       <span class="arr">23:00</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 4</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 4</span>
     </div>
   </a>
 <a class="service stock-222 conf-predicted" href="https://www.realtimetrains.co.uk/service/gb-nr:Y12310/2026-04-25/detailed" target="_blank" rel="noopener">
@@ -2275,29 +2156,26 @@
       <span class="dep">21:32</span>
       <span class="arrow">→</span>
       <span class="arr">23:34</span>
+      
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
-      <span class="stock-badge">Class 222 Meridian</span>
-      <span class="conf-badge">predicted</span>
-      
-      
-      <span class="platform">Plat 2</span>
-      
+      <span class="stock">Meridian</span>
+      <span class="conf">predicted</span>
+      <span class="chips">Plat 2</span>
     </div>
   </a></div>
   </section>
   </div>
-</main>
-<footer>
-  Generated 2026-04-24T21:24:06.709Z from
-  <a href="https://www.realtimetrains.co.uk/" target="_blank" rel="noopener">Realtime Trains</a>.
-  Stock predictions use CIF "Pathed as" power type; "confirmed" means Know Your Train formation data is available.
-</footer>
+  </main>
+  <footer>
+    Data from <a href="https://www.realtimetrains.co.uk/" target="_blank" rel="noopener">Realtime Trains</a>.
+  </footer>
+</div>
 <script>
 (function () {
-  var keys = ["date", "direction", "first"];
-  var defaults = { date: "today", direction: "both", first: "to-london" };
+  var keys = ["date", "direction", "stock"];
+  var defaults = { date: "today", direction: "to-london", stock: "all" };
   var state = {};
   keys.forEach(function (k) {
     var v = null;
@@ -2309,8 +2187,9 @@
     keys.forEach(function (k) {
       document.body.setAttribute("data-" + k, state[k]);
       document.querySelectorAll('[data-control="' + k + '"]').forEach(function (btn) {
-        btn.classList.toggle("active", btn.getAttribute("data-value") === state[k]);
-        btn.setAttribute("aria-selected", btn.getAttribute("data-value") === state[k] ? "true" : "false");
+        var on = btn.getAttribute("data-value") === state[k];
+        btn.classList.toggle("active", on);
+        btn.setAttribute("aria-selected", on ? "true" : "false");
       });
     });
   }
