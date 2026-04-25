@@ -2,7 +2,7 @@
 // Realtime Trains (API + website scrape for stock identification) and writes
 // index.html with client-side toggles for date, direction, stock class, order.
 
-import { writeFile } from "node:fs/promises";
+import { writeFile, appendFile, access } from "node:fs/promises";
 
 const RTT_API = "https://data.rtt.io";
 const RTT_WEB = "https://www.realtimetrains.co.uk";
@@ -55,6 +55,79 @@ function escapeHtml(s) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+function csvEscape(v) {
+  if (v === null || v === undefined) return "";
+  const s = String(v);
+  return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+const LEDGER_PATH = "ledger.csv";
+const LEDGER_COLUMNS = [
+  "fetched_at",
+  "service_date",
+  "direction",
+  "service_uid",
+  "departure_time",
+  "arrival_time",
+  "origin",
+  "destination",
+  "platform",
+  "stock_class",
+  "confidence",
+  "stock_branding",
+  "number_of_vehicles",
+  "unit_number",
+  "pathed_as",
+  "cancelled",
+];
+
+async function appendLedger(fetchedAt, today, tomorrow) {
+  const rows = [];
+  for (const day of [today, tomorrow]) {
+    for (const [direction, services] of [
+      ["to-london", day.toLondon],
+      ["to-sheffield", day.toSheffield],
+    ]) {
+      for (const s of services) {
+        rows.push([
+          fetchedAt,
+          day.date,
+          direction,
+          s.serviceUid,
+          s.departureTime,
+          s.arrivalTime,
+          s.origin,
+          s.destination,
+          s.platform ?? "",
+          s.stockClass,
+          s.confidence,
+          s.stockBranding ?? "",
+          s.numberOfVehicles ?? "",
+          s.unitNumber ?? "",
+          s.pathedAs ?? "",
+          s.cancelled ? "true" : "false",
+        ]);
+      }
+    }
+  }
+  if (rows.length === 0) return 0;
+
+  let exists = true;
+  try {
+    await access(LEDGER_PATH);
+  } catch {
+    exists = false;
+  }
+
+  const body = rows.map((r) => r.map(csvEscape).join(",")).join("\n") + "\n";
+  if (exists) {
+    await appendFile(LEDGER_PATH, body, "utf8");
+  } else {
+    await writeFile(LEDGER_PATH, LEDGER_COLUMNS.join(",") + "\n" + body, "utf8");
+  }
+  return rows.length;
 }
 
 async function getAccessToken() {
@@ -705,6 +778,9 @@ async function main() {
   const html = renderHtml(today, tomorrow, generatedAt);
   await writeFile("index.html", html, "utf8");
   console.log(`Wrote index.html (${html.length} bytes)`);
+
+  const ledgerRows = await appendLedger(generatedAt, today, tomorrow);
+  console.log(`Appended ${ledgerRows} rows to ${LEDGER_PATH}`);
 
   const hadAnyData =
     today.toLondon.length +
