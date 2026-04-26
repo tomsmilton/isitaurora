@@ -456,3 +456,95 @@ fetched_at,service_date,direction,service_uid,departure_time,arrival_time,origin
 2026-04-26T14:49:00.595Z,2026-04-27,to-sheffield,Y12307,21:02,23:00,St Pancras International,Sheffield,2,222,predicted,,,,Diesel multiple unit,false
 2026-04-26T14:49:00.595Z,2026-04-27,to-sheffield,Y12309,21:32,23:41,St Pancras International,Sheffield,3,222,predicted,,,,Diesel multiple unit,false
 2026-04-26T14:49:00.595Z,2026-04-27,to-sheffield,Y12311,22:32,00:48,St Pancras International,Sheffield,2,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-26,to-london,Y12136,08:22,10:56,Sheffield,St Pancras International,8,222,confirmed,Meridian,5,,,false
+2026-04-26T16:50:06.032Z,2026-04-26,to-london,Y12137,09:22,11:56,Sheffield,St Pancras International,2A,810,confirmed,Aurora,5,,,false
+2026-04-26T16:50:06.032Z,2026-04-26,to-london,C51606,10:52,13:10,Sheffield,St Pancras International,8,810,confirmed,Aurora,5,,,false
+2026-04-26T16:50:06.032Z,2026-04-26,to-london,Y12139,11:52,14:10,Sheffield,St Pancras International,8A,222,confirmed,Meridian,5,,,false
+2026-04-26T16:50:06.032Z,2026-04-26,to-london,Y12142,12:52,15:10,Sheffield,St Pancras International,2,222,confirmed,Meridian,10,,,false
+2026-04-26T16:50:06.032Z,2026-04-26,to-london,Y12146,13:51,16:10,Sheffield,St Pancras International,8,222,confirmed,Meridian,10,,,false
+2026-04-26T16:50:06.032Z,2026-04-26,to-london,C52211,14:51,17:10,Sheffield,St Pancras International,8,222,confirmed,Meridian,10,,,false
+2026-04-26T16:50:06.032Z,2026-04-26,to-london,Y12155,15:51,18:10,Sheffield,St Pancras International,2,810,confirmed,Aurora,5,,,false
+2026-04-26T16:50:06.032Z,2026-04-26,to-london,C51604,16:51,19:11,Sheffield,St Pancras International,8,810,confirmed,Aurora,5,,,false
+2026-04-26T16:50:06.032Z,2026-04-26,to-london,Y12163,17:51,20:10,Sheffield,St Pancras International,2,222,confirmed,Meridian,10,,,false
+2026-04-26T16:50:06.032Z,2026-04-26,to-london,C51640,18:51,21:10,Sheffield,St Pancras International,2B,222,confirmed,Meridian,10,,,false
+2026-04-26T16:50:06.032Z,2026-04-26,to-london,Y12167,19:51,22:10,Sheffield,St Pancras International,2,222,confirmed,Meridian,10,,,false
+2026-04-26T16:50:06.032Z,2026-04-26,to-london,C51615,20:27,23:01,Sheffield,St Pancras International,8,222,confirmed,Meridian,10,,,false
+2026-04-26T16:50:06.032Z,2026-04-26,to-sheffield,C52141,09:30,11:56,St Pancras International,Sheffield,4,222,confirmed,Meridian,10,,,false
+2026-04-26T16:50:06.032Z,2026-04-26,to-sheffield,Y12248,10:45,13:23,St Pancras International,Sheffield,4,222,confirmed,Meridian,5,,,false
+2026-04-26T16:50:06.032Z,2026-04-26,to-sheffield,C51976,12:00,14:29,St Pancras International,Sheffield,4,222,confirmed,Meridian,10,,,false
+2026-04-26T16:50:06.032Z,2026-04-26,to-sheffield,Y12255,13:00,15:22,St Pancras International,Sheffield,3,810,confirmed,Aurora,5,,,false
+2026-04-26T16:50:06.032Z,2026-04-26,to-sheffield,Y12258,14:00,16:19,St Pancras International,Sheffield,3,810,confirmed,Aurora,5,,,false
+2026-04-26T16:50:06.032Z,2026-04-26,to-sheffield,Y12262,15:00,17:17,St Pancras International,Sheffield,3,222,confirmed,Meridian,10,,,false
+2026-04-26T16:50:06.032Z,2026-04-26,to-sheffield,Y12267,15:46,18:03,St Pancras International,Sheffield,3,222,confirmed,Meridian,10,,,false
+2026-04-26T16:50:06.032Z,2026-04-26,to-sheffield,C51697,16:45,19:02,St Pancras International,Sheffield,3,222,confirmed,Meridian,10,,,false
+2026-04-26T16:50:06.032Z,2026-04-26,to-sheffield,C52100,17:45,20:05,St Pancras International,Sheffield,3,222,confirmed,Meridian,10,,,false
+2026-04-26T16:50:06.032Z,2026-04-26,to-sheffield,Y12283,18:45,21:02,St Pancras International,Sheffield,3,810,confirmed,Aurora,5,,,false
+2026-04-26T16:50:06.032Z,2026-04-26,to-sheffield,Y12290,19:45,22:08,St Pancras International,Sheffield,4,222,confirmed,Meridian,5,,,false
+2026-04-26T16:50:06.032Z,2026-04-26,to-sheffield,Y12294,20:45,23:13,St Pancras International,Sheffield,4,222,confirmed,Meridian,10,,,false
+2026-04-26T16:50:06.032Z,2026-04-26,to-sheffield,C52005,21:56,00:11,St Pancras International,Sheffield,4,222,confirmed,Meridian,10,,,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,C51617,04:58,07:09,Sheffield,St Pancras International,8A,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,C51655,05:30,07:39,Sheffield,St Pancras International,8B,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,C51563,05:56,08:08,Sheffield,St Pancras International,6,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,C51627,06:30,08:38,Sheffield,St Pancras International,8,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,Y12140,07:00,09:09,Sheffield,St Pancras International,2,810,predicted,,,,Class 810 EMU from here,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,Y12141,07:34,09:39,Sheffield,St Pancras International,8A,810,predicted,,,,Class 810 EMU from here,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,Y12145,07:59,10:09,Sheffield,St Pancras International,2,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,Y12147,08:35,10:39,Sheffield,St Pancras International,8,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,C51645,09:00,11:09,Sheffield,St Pancras International,2A,810,predicted,,,,Class 810 EMU from here,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,Y12151,09:35,11:36,Sheffield,St Pancras International,8,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,Y12153,10:00,12:09,Sheffield,St Pancras International,2,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,C51596,10:35,12:39,Sheffield,St Pancras International,8,810,predicted,,,,Class 810 EMU from here,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,C51613,11:00,13:07,Sheffield,St Pancras International,2,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,C51678,11:35,13:39,Sheffield,St Pancras International,8,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,Y12161,12:00,14:09,Sheffield,St Pancras International,2A,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,C51677,12:35,14:39,Sheffield,St Pancras International,7,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,Y12165,13:00,15:09,Sheffield,St Pancras International,5A,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,Y12168,13:35,15:39,Sheffield,St Pancras International,8,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,C51598,14:00,16:09,Sheffield,St Pancras International,2,810,predicted,,,,Class 810 EMU from here,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,Y12171,14:35,16:39,Sheffield,St Pancras International,8,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,C51651,15:00,17:09,Sheffield,St Pancras International,2,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,C51694,15:35,17:39,Sheffield,St Pancras International,8,810,predicted,,,,Class 810 EMU from here,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,Y12175,16:00,18:10,Sheffield,St Pancras International,2,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,C51702,16:35,18:41,Sheffield,St Pancras International,8,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,C51680,17:00,19:10,Sheffield,St Pancras International,2A,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,Y12178,17:32,19:39,Sheffield,St Pancras International,8,810,predicted,,,,Class 810 EMU from here,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,C52148,18:00,20:07,Sheffield,St Pancras International,2A,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,C51643,18:35,20:36,Sheffield,St Pancras International,8A,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,C52322,19:00,21:08,Sheffield,St Pancras International,8B,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,C52201,19:35,21:38,Sheffield,St Pancras International,7,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,C51601,20:00,22:07,Sheffield,St Pancras International,6,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,Y12185,21:00,23:16,Sheffield,St Pancras International,2A,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-london,C52164,21:45,00:23,Sheffield,St Pancras International,7,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,C52105,05:27,07:42,St Pancras International,Sheffield,3,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,C51957,05:59,08:03,St Pancras International,Sheffield,3,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,Y12250,07:02,09:06,St Pancras International,Sheffield,4,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,Y12252,07:30,09:42,St Pancras International,Sheffield,4,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,C52102,08:03,10:04,St Pancras International,Sheffield,3,222,predicted,,,,Diesel multiple unit from here,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,C51710,08:32,10:42,St Pancras International,Sheffield,3,222,predicted,,,,Diesel multiple unit from here,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,Y12257,09:02,11:04,St Pancras International,Sheffield,3,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,Y12260,09:32,11:41,St Pancras International,Sheffield,2,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,Y12263,10:02,12:05,St Pancras International,Sheffield,4,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,Y12265,10:32,12:44,St Pancras International,Sheffield,4,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,Y12268,11:02,13:01,St Pancras International,Sheffield,2,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,Y12271,11:32,13:41,St Pancras International,Sheffield,3,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,Y12273,12:02,14:04,St Pancras International,Sheffield,4,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,Y12275,12:32,14:41,St Pancras International,Sheffield,3,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,Y12278,13:02,15:04,St Pancras International,Sheffield,3,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,Y12280,13:32,15:44,St Pancras International,Sheffield,2,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,C51693,14:02,16:04,St Pancras International,Sheffield,3,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,Y12284,14:32,16:41,St Pancras International,Sheffield,4,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,C52126,15:02,17:04,St Pancras International,Sheffield,2,222,predicted,,,,Diesel multiple unit from here,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,Y12287,15:31,17:43,St Pancras International,Sheffield,4,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,Y12291,16:02,18:04,St Pancras International,Sheffield,2,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,C52477,16:32,18:51,St Pancras International,Sheffield,2,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,C52106,17:02,19:17,St Pancras International,Sheffield,3,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,Y12297,17:32,19:47,St Pancras International,Sheffield,3,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,Y12299,18:02,20:02,St Pancras International,Sheffield,4,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,Y12300,18:32,20:47,St Pancras International,Sheffield,2,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,C52095,19:02,21:18,St Pancras International,Sheffield,4,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,Y12303,19:32,21:44,St Pancras International,Sheffield,4,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,Y12305,20:02,22:03,St Pancras International,Sheffield,4,222,predicted,,,,Diesel multiple unit from here,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,Y12306,20:32,22:41,St Pancras International,Sheffield,4,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,Y12307,21:02,23:00,St Pancras International,Sheffield,2,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,Y12309,21:32,23:41,St Pancras International,Sheffield,3,222,predicted,,,,Diesel multiple unit,false
+2026-04-26T16:50:06.032Z,2026-04-27,to-sheffield,Y12311,22:32,00:48,St Pancras International,Sheffield,2,222,predicted,,,,Diesel multiple unit,false
