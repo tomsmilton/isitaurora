@@ -48,6 +48,14 @@ function parseIsoTime(iso) {
   return m ? `${m[1]}:${m[2]}` : "—";
 }
 
+// Like parseIsoTime but returns null (not the "—" placeholder) for missing
+// input, so it can be written cleanly to CSV and conditionally rendered.
+function isoTimeOrNull(iso) {
+  if (!iso) return null;
+  const m = iso.match(/T(\d{2}):(\d{2})/);
+  return m ? `${m[1]}:${m[2]}` : null;
+}
+
 function escapeHtml(s) {
   return String(s ?? "")
     .replace(/&/g, "&amp;")
@@ -81,6 +89,10 @@ const LEDGER_COLUMNS = [
   "unit_number",
   "pathed_as",
   "cancelled",
+  "actual_departure_time",
+  "actual_arrival_time",
+  "departure_lateness_min",
+  "arrival_lateness_min",
 ];
 
 async function appendLedger(fetchedAt, today, tomorrow) {
@@ -108,6 +120,10 @@ async function appendLedger(fetchedAt, today, tomorrow) {
           s.unitNumber ?? "",
           s.pathedAs ?? "",
           s.cancelled ? "true" : "false",
+          s.actualDepartureTime ?? "",
+          s.actualArrivalTime ?? "",
+          s.departureLatenessMin ?? "",
+          s.arrivalLatenessMin ?? "",
         ]);
       }
     }
@@ -253,13 +269,19 @@ function enrichService(entry, stock) {
   const temporal = entry.temporalData ?? {};
   const locMeta = entry.locationMetadata ?? {};
   const dep = temporal.departure ?? {};
+  // entry.destination[0].temporalData is IndividualTemporalData directly (not nested
+  // arrival/departure) per the v2 spec — same fields as `dep` here.
+  const destTemporal = entry.destination?.[0]?.temporalData ?? {};
   return {
     serviceUid: sched.identity ?? sched.uniqueIdentity ?? "",
     departureTime: parseIsoTime(dep.scheduleAdvertised ?? dep.scheduleInternal),
     arrivalTime: parseIsoTime(
-      entry.destination?.[0]?.temporalData?.scheduleAdvertised ??
-        entry.destination?.[0]?.temporalData?.scheduleInternal
+      destTemporal.scheduleAdvertised ?? destTemporal.scheduleInternal
     ),
+    actualDepartureTime: isoTimeOrNull(dep.realtimeActual),
+    actualArrivalTime: isoTimeOrNull(destTemporal.realtimeActual),
+    departureLatenessMin: dep.realtimeAdvertisedLateness,
+    arrivalLatenessMin: destTemporal.realtimeAdvertisedLateness,
     origin: entry.origin?.[0]?.location?.description ?? "",
     destination: entry.destination?.[0]?.location?.description ?? "",
     platform: locMeta.platform?.forecast ?? locMeta.platform?.planned,
@@ -313,6 +335,30 @@ function stockLabel(cls) {
   return "Unknown";
 }
 
+function latenessChip(min) {
+  if (min === null || min === undefined || min === "") return "";
+  const n = Number(min);
+  if (!Number.isFinite(n)) return "";
+  if (n === 0) return `<span class="lateness on-time">on time</span>`;
+  if (n > 0) return `<span class="lateness late">+${n}</span>`;
+  return `<span class="lateness early">${n}</span>`;
+}
+
+function actualTimesRow(s) {
+  const hasDep = !!s.actualDepartureTime;
+  const hasArr = !!s.actualArrivalTime;
+  if (!hasDep && !hasArr) return "";
+  // Prefer arrival lateness (the destination-relevant figure); fall back to
+  // departure lateness if the train has only just departed.
+  const late = s.arrivalLatenessMin ?? s.departureLatenessMin;
+  return `<div class="actual-times">
+      <span class="actual-dep">${escapeHtml(s.actualDepartureTime ?? "—")}</span>
+      <span class="arrow">→</span>
+      <span class="actual-arr">${escapeHtml(s.actualArrivalTime ?? "—")}</span>
+      ${latenessChip(late)}
+    </div>`;
+}
+
 function serviceCard(s, date) {
   const link = s.serviceUid
     ? `${RTT_WEB}/service/gb-nr:${encodeURIComponent(s.serviceUid)}/${date}/detailed`
@@ -335,6 +381,7 @@ function serviceCard(s, date) {
       <span class="arr">${escapeHtml(s.arrivalTime)}</span>
       ${s.cancelled ? `<span class="cancel-tag">Cancelled</span>` : ""}
     </div>
+    ${actualTimesRow(s)}
     <div class="route">${escapeHtml(s.origin)} → ${escapeHtml(s.destination)}</div>
     <div class="meta">
       <span class="stock">${escapeHtml(stockLabel(s.stockClass))}</span>
@@ -610,6 +657,26 @@ function renderHtml(today, tomorrow, generatedAt) {
     font-size: 11px; font-weight: 500;
     letter-spacing: 0.04em; text-transform: uppercase;
   }
+
+  .actual-times {
+    display: flex; align-items: baseline; gap: 6px;
+    margin-top: 2px;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+  }
+  .actual-times .actual-dep { color: var(--fg); opacity: 0.65; }
+  .actual-times .arrow { color: var(--subtle); font-size: 10px; }
+  .lateness {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .lateness.on-time { color: var(--ok); }
+  .lateness.early   { color: var(--ok); }
+  .lateness.late    { color: var(--warn); }
 
   .route {
     color: var(--muted); font-size: 12px;
