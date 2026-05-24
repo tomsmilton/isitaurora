@@ -194,18 +194,23 @@ function parseStockFromHtml(html) {
     };
   }
 
-  // Predicted via CIF "Pathed as" power type
-  const pathedMatches = [...html.matchAll(/Pathed as\s+([^<"]+)/gi)].map((p) =>
-    p[1].trim()
-  );
-  const pathedAs = pathedMatches.join(" | ") || undefined;
+  // Predicted via CIF "Pathed as" / "Starts as" power type. Bi-mode 810s appear
+  // under "Pathed as Class 810 EMU from here" northbound (off the wires onto them)
+  // and "Starts as Class 810 EMU, changes en route" southbound (under wires out of
+  // STP, then onto diesel). Missing the southbound phrasing misclassifies them as 222.
+  const formationMatches = [
+    ...html.matchAll(/(?:Pathed as|Starts as)\s+([^<"]+)/gi),
+  ];
+  const stockHints = formationMatches.map((p) => p[1].trim());
+  const pathedAs =
+    formationMatches.map((p) => p[0].trim()).join(" | ") || undefined;
 
-  for (const p of pathedMatches) {
+  for (const p of stockHints) {
     if (/class\s*810/i.test(p) || /electro.?diesel/i.test(p)) {
       return { stockClass: "810", confidence: "predicted", pathedAs };
     }
   }
-  for (const p of pathedMatches) {
+  for (const p of stockHints) {
     if (/diesel\s+multiple\s+unit/i.test(p)) {
       return { stockClass: "222", confidence: "predicted", pathedAs };
     }
