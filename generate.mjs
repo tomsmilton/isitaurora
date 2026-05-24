@@ -95,9 +95,9 @@ const LEDGER_COLUMNS = [
   "arrival_lateness_min",
 ];
 
-async function appendLedger(fetchedAt, today, tomorrow) {
+async function appendLedger(fetchedAt, days) {
   const rows = [];
-  for (const day of [today, tomorrow]) {
+  for (const day of days) {
     for (const [direction, services] of [
       ["to-london", day.toLondon],
       ["to-sheffield", day.toSheffield],
@@ -834,6 +834,14 @@ function renderHtml(today, tomorrow, generatedAt) {
 async function main() {
   const todayDate = process.env.REPORT_DATE || todayYmd();
   const tomorrowDate = addDays(todayDate, 1);
+  const yesterdayDate = addDays(todayDate, -1);
+  // The last cron of the day is 21:00 UTC. Late-evening services (last STP→SHF
+  // arrives ~23:40 UTC) finish after that and aren't re-checked by tomorrow's
+  // runs, so their realtime actuals go unrecorded. In the early-morning cron
+  // ticks (01:00 and 03:00 UTC), backfill yesterday so those rows get a final
+  // observation with arrivals filled in. Yesterday is appended to the ledger
+  // but is not shown on the page.
+  const includeYesterday = new Date().getUTCHours() < 4;
   const generatedAt = new Date().toISOString();
 
   let token;
@@ -852,9 +860,10 @@ async function main() {
     process.exit(1);
   }
 
-  const [today, tomorrow] = await Promise.all([
+  const [today, tomorrow, yesterday] = await Promise.all([
     fetchDay(token, todayDate),
     fetchDay(token, tomorrowDate),
+    includeYesterday ? fetchDay(token, yesterdayDate) : Promise.resolve(null),
   ]);
 
   console.log(
@@ -863,12 +872,19 @@ async function main() {
   console.log(
     `Tomorrow ${tomorrowDate}: ${tomorrow.toLondon.length}↓ ${tomorrow.toSheffield.length}↑${tomorrow.error ? ` (error: ${tomorrow.error})` : ""}`
   );
+  if (yesterday) {
+    console.log(
+      `Yesterday ${yesterdayDate}: ${yesterday.toLondon.length}↓ ${yesterday.toSheffield.length}↑${yesterday.error ? ` (error: ${yesterday.error})` : ""} (backfill — not rendered)`
+    );
+  }
 
   const html = renderHtml(today, tomorrow, generatedAt);
   await writeFile("index.html", html, "utf8");
   console.log(`Wrote index.html (${html.length} bytes)`);
 
-  const ledgerRows = await appendLedger(generatedAt, today, tomorrow);
+  // Yesterday goes into the ledger but never the page.
+  const ledgerDays = yesterday ? [yesterday, today, tomorrow] : [today, tomorrow];
+  const ledgerRows = await appendLedger(generatedAt, ledgerDays);
   console.log(`Appended ${ledgerRows} rows to ${LEDGER_PATH}`);
 
   const hadAnyData =
