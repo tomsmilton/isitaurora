@@ -1,11 +1,11 @@
 name: Daily train report
 
 on:
-  # Aligned to UK summer time (BST, UTC+1): fires at 06, 08, 10, 15, 17, 19, 22 UK local.
-  # In UK winter (GMT), these fire one hour earlier (05, 07, 09, 14, 16, 18, 21 local)
+  # Aligned to UK summer time (BST, UTC+1): fires at 02, 04, 06, 08, 10, 15, 17, 19, 22 UK local.
+  # In UK winter (GMT), these fire one hour earlier (01, 03, 05, 07, 09, 14, 16, 18, 21 local)
   # because cron runs in UTC and can't handle DST. Shift if you care.
   schedule:
-    - cron: "0 5,7,9,14,16,18,21 * * *"
+    - cron: "0 1,3,5,7,9,14,16,18,21 * * *"
   push:
     branches: [main]
   workflow_dispatch:
