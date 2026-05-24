@@ -162,10 +162,11 @@ async function getAccessToken() {
   return token;
 }
 
-async function searchServices(token, origin, dest, date) {
+async function locationLineup(token, code, filter, date) {
+  // filter: { filterTo: "STP" } or { filterFrom: "SHF" }
   const url = new URL("/gb-nr/location", RTT_API);
-  url.searchParams.set("code", origin);
-  url.searchParams.set("filterTo", dest);
+  url.searchParams.set("code", code);
+  for (const [k, v] of Object.entries(filter)) url.searchParams.set(k, v);
   url.searchParams.set("timeFrom", `${date}T00:00:00Z`);
   url.searchParams.set("timeTo", `${date}T23:59:00Z`);
 
@@ -174,11 +175,15 @@ async function searchServices(token, origin, dest, date) {
   });
   if (!res.ok) {
     throw new Error(
-      `Search ${origin}->${dest} ${date} failed: ${res.status} ${res.statusText}`
+      `Search ${code} ${JSON.stringify(filter)} ${date} failed: ${res.status} ${res.statusText}`
     );
   }
   const data = await res.json();
   return data.services ?? [];
+}
+
+function serviceUidOf(entry) {
+  return entry?.scheduleMetadata?.identity ?? entry?.scheduleMetadata?.uniqueIdentity ?? null;
 }
 
 function parseStockFromHtml(html) {
@@ -264,24 +269,28 @@ async function mapWithConcurrency(items, limit, worker) {
   return results;
 }
 
-function enrichService(entry, stock) {
+function enrichService(entry, destEntry, stock) {
   const sched = entry.scheduleMetadata ?? {};
   const temporal = entry.temporalData ?? {};
   const locMeta = entry.locationMetadata ?? {};
   const dep = temporal.departure ?? {};
-  // entry.destination[0].temporalData is IndividualTemporalData directly (not nested
-  // arrival/departure) per the v2 spec — same fields as `dep` here.
-  const destTemporal = entry.destination?.[0]?.temporalData ?? {};
+  // entry.destination[0].temporalData is IndividualTemporalData (flat) per the
+  // v2 spec — it carries the scheduled times but no realtime data in the
+  // origin-station search response. For the realtime arrival we look at the
+  // service's entry in the destination-station search, where it appears as
+  // LocationTemporalData with the arrival subfield populated.
+  const destSchedTemporal = entry.destination?.[0]?.temporalData ?? {};
+  const destArr = destEntry?.temporalData?.arrival ?? {};
   return {
     serviceUid: sched.identity ?? sched.uniqueIdentity ?? "",
     departureTime: parseIsoTime(dep.scheduleAdvertised ?? dep.scheduleInternal),
     arrivalTime: parseIsoTime(
-      destTemporal.scheduleAdvertised ?? destTemporal.scheduleInternal
+      destSchedTemporal.scheduleAdvertised ?? destSchedTemporal.scheduleInternal
     ),
     actualDepartureTime: isoTimeOrNull(dep.realtimeActual),
-    actualArrivalTime: isoTimeOrNull(destTemporal.realtimeActual),
+    actualArrivalTime: isoTimeOrNull(destArr.realtimeActual),
     departureLatenessMin: dep.realtimeAdvertisedLateness,
-    arrivalLatenessMin: destTemporal.realtimeAdvertisedLateness,
+    arrivalLatenessMin: destArr.realtimeAdvertisedLateness,
     origin: entry.origin?.[0]?.location?.description ?? "",
     destination: entry.destination?.[0]?.location?.description ?? "",
     platform: locMeta.platform?.forecast ?? locMeta.platform?.planned,
@@ -292,23 +301,31 @@ function enrichService(entry, stock) {
 }
 
 async function fetchDirection(token, origin, dest, date) {
-  const raw = await searchServices(token, origin, dest, date);
-  const entries = raw.filter((e) => {
+  const [originSide, destSide] = await Promise.all([
+    locationLineup(token, origin, { filterTo: dest }, date),
+    locationLineup(token, dest, { filterFrom: origin }, date),
+  ]);
+  const isEmrPassenger = (e) => {
     const m = e.scheduleMetadata;
     return m?.operator?.code === EMR_OPERATOR && m?.inPassengerService === true;
-  });
+  };
+  const entries = originSide.filter(isEmrPassenger);
+  const destByUid = new Map();
+  for (const e of destSide.filter(isEmrPassenger)) {
+    const uid = serviceUidOf(e);
+    if (uid) destByUid.set(uid, e);
+  }
   const stocks = await mapWithConcurrency(
     entries,
     MAX_CONCURRENT_SCRAPES,
     async (e) => {
-      const id =
-        e.scheduleMetadata?.identity ?? e.scheduleMetadata?.uniqueIdentity;
+      const id = serviceUidOf(e);
       if (!id) return { stockClass: "unknown", confidence: "unknown" };
       return scrapeStock(id, date);
     }
   );
   return entries
-    .map((e, i) => enrichService(e, stocks[i]))
+    .map((e, i) => enrichService(e, destByUid.get(serviceUidOf(e)), stocks[i]))
     .sort((a, b) => a.departureTime.localeCompare(b.departureTime));
 }
 
