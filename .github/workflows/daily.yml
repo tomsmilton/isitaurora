@@ -29,6 +29,11 @@ jobs:
         run: node generate.mjs
 
       - name: Commit updated report
+        # Always publish, even if generate.mjs exited non-zero: the script still
+        # writes a valid index.html (an empty/quiet-day page or an error page),
+        # and committing it keeps the site fresh instead of letting it freeze on
+        # the last good run. The job is still marked failed if generate failed.
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

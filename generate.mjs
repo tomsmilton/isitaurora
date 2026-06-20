@@ -11,6 +11,55 @@ const SHEFFIELD = "SHF";
 const ST_PANCRAS = "STP";
 const MAX_CONCURRENT_SCRAPES = 6;
 
+// Network resilience: how many times to retry a transient failure, the base
+// backoff (doubled each attempt, plus jitter), and a per-request timeout so a
+// hung socket can never stall the whole run.
+const MAX_RETRIES = 3;
+const RETRY_BASE_MS = 500;
+const REQUEST_TIMEOUT_MS = 20000;
+// Statuses worth retrying: rate limiting (429) and transient upstream faults.
+const RETRYABLE_STATUS = new Set([429, 500, 502, 503, 504]);
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function backoffDelay(attempt) {
+  // Exponential backoff with up to ~25% jitter to avoid synchronised retries.
+  const base = RETRY_BASE_MS * 2 ** attempt;
+  return base + Math.floor(Math.random() * base * 0.25);
+}
+
+// fetch() wrapper that retries on network errors and transient HTTP statuses,
+// and bounds every request with a timeout. Non-retryable responses (e.g. 404)
+// are returned as-is for the caller to interpret; the caller still inspects
+// res.ok. Throws only if every attempt fails (network error / timeout).
+async function fetchRetry(url, options = {}, label = "request") {
+  let lastErr;
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const res = await fetch(url, {
+        ...options,
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      });
+      if (RETRYABLE_STATUS.has(res.status) && attempt < MAX_RETRIES) {
+        await sleep(backoffDelay(attempt));
+        continue;
+      }
+      return res;
+    } catch (err) {
+      lastErr = err;
+      if (attempt < MAX_RETRIES) {
+        await sleep(backoffDelay(attempt));
+        continue;
+      }
+    }
+  }
+  throw new Error(
+    `${label} failed after ${MAX_RETRIES + 1} attempts: ${
+      lastErr instanceof Error ? lastErr.message : String(lastErr)
+    }`
+  );
+}
+
 function todayYmd() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -150,9 +199,11 @@ async function getAccessToken() {
   const refresh = process.env.RTT_API_TOKEN;
   if (!refresh) throw new Error("RTT_API_TOKEN env var is required");
 
-  const res = await fetch(`${RTT_API}/api/get_access_token`, {
-    headers: { Authorization: `Bearer ${refresh}` },
-  });
+  const res = await fetchRetry(
+    `${RTT_API}/api/get_access_token`,
+    { headers: { Authorization: `Bearer ${refresh}` } },
+    "Token exchange"
+  );
   if (!res.ok) {
     throw new Error(`Token exchange failed: ${res.status} ${res.statusText}`);
   }
@@ -170,9 +221,13 @@ async function locationLineup(token, code, filter, date) {
   url.searchParams.set("timeFrom", `${date}T00:00:00Z`);
   url.searchParams.set("timeTo", `${date}T23:59:00Z`);
 
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
-  });
+  const res = await fetchRetry(
+    url,
+    {
+      headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+    },
+    `Search ${code} ${JSON.stringify(filter)} ${date}`
+  );
   if (!res.ok) {
     throw new Error(
       `Search ${code} ${JSON.stringify(filter)} ${date} failed: ${res.status} ${res.statusText}`
@@ -242,12 +297,16 @@ function parseStockFromHtml(html) {
 async function scrapeStock(serviceIdentity, date) {
   const url = `${RTT_WEB}/service/gb-nr:${serviceIdentity}/${date}/detailed`;
   try {
-    const res = await fetch(url, {
-      headers: {
-        Accept: "text/html",
-        "User-Agent": "EMRDailyReport/1.0 (personal use)",
+    const res = await fetchRetry(
+      url,
+      {
+        headers: {
+          Accept: "text/html",
+          "User-Agent": "EMRDailyReport/1.0 (personal use)",
+        },
       },
-    });
+      `Scrape ${serviceIdentity}`
+    );
     if (!res.ok) return { stockClass: "unknown", confidence: "unknown" };
     return parseStockFromHtml(await res.text());
   } catch {
@@ -301,10 +360,27 @@ function enrichService(entry, destEntry, stock) {
 }
 
 async function fetchDirection(token, origin, dest, date) {
-  const [originSide, destSide] = await Promise.all([
+  // The origin-side lineup IS the schedule for this direction, so a failure
+  // there must propagate. The dest-side lineup is only used to enrich rows with
+  // realtime arrival data, so it's best-effort: if it fails we still return the
+  // full schedule, just without realtime arrivals for this run.
+  const [originSide, destSideResult] = await Promise.all([
     locationLineup(token, origin, { filterTo: dest }, date),
-    locationLineup(token, dest, { filterFrom: origin }, date),
+    locationLineup(token, dest, { filterFrom: origin }, date).then(
+      (value) => ({ ok: true, value }),
+      (err) => ({ ok: false, err })
+    ),
   ]);
+  if (!destSideResult.ok) {
+    console.warn(
+      `Dest-side enrichment ${dest} ${date} failed (continuing without realtime arrivals): ${
+        destSideResult.err instanceof Error
+          ? destSideResult.err.message
+          : String(destSideResult.err)
+      }`
+    );
+  }
+  const destSide = destSideResult.ok ? destSideResult.value : [];
   const isEmrPassenger = (e) => {
     const m = e.scheduleMetadata;
     return m?.operator?.code === EMR_OPERATOR && m?.inPassengerService === true;
@@ -330,20 +406,26 @@ async function fetchDirection(token, origin, dest, date) {
 }
 
 async function fetchDay(token, date) {
-  try {
-    const [toLondon, toSheffield] = await Promise.all([
-      fetchDirection(token, SHEFFIELD, ST_PANCRAS, date),
-      fetchDirection(token, ST_PANCRAS, SHEFFIELD, date),
-    ]);
-    return { date, toLondon, toSheffield };
-  } catch (err) {
-    return {
-      date,
-      toLondon: [],
-      toSheffield: [],
-      error: err instanceof Error ? err.message : String(err),
-    };
-  }
+  // Each direction is isolated: a failure fetching one must not blank the other.
+  const [toLondonR, toSheffieldR] = await Promise.allSettled([
+    fetchDirection(token, SHEFFIELD, ST_PANCRAS, date),
+    fetchDirection(token, ST_PANCRAS, SHEFFIELD, date),
+  ]);
+  const errors = [];
+  const settle = (result, label) => {
+    if (result.status === "fulfilled") return result.value;
+    const reason = result.reason;
+    errors.push(`${label}: ${reason instanceof Error ? reason.message : String(reason)}`);
+    return [];
+  };
+  const toLondon = settle(toLondonR, "Sheffield→London");
+  const toSheffield = settle(toSheffieldR, "London→Sheffield");
+  return {
+    date,
+    toLondon,
+    toSheffield,
+    error: errors.length ? errors.join("; ") : undefined,
+  };
 }
 
 function stockLabel(cls) {
@@ -857,6 +939,9 @@ async function main() {
     );
     await writeFile("index.html", html, "utf8");
     console.error("Token failure:", msg);
+    // Exit non-zero so CI flags it, but the workflow still commits this error
+    // page (its commit step runs with `if: always()`) so the site shows the
+    // problem instead of silently going stale.
     process.exit(1);
   }
 
@@ -887,13 +972,35 @@ async function main() {
   const ledgerRows = await appendLedger(generatedAt, ledgerDays);
   console.log(`Appended ${ledgerRows} rows to ${LEDGER_PATH}`);
 
+  // Only a genuine fetch failure should fail the build. A day that legitimately
+  // has no services — engineering works, full-line disruption, or tomorrow's
+  // schedule not published yet — is a valid, publishable result, not an error.
+  // (Previously any empty result hit `exit(1)`, which failed the job and, since
+  // the commit step had no `if: always()`, skipped publishing entirely. So on a
+  // quiet/disrupted day the site froze instead of showing "no services".)
+  const fetchErrors = [today, tomorrow, yesterday]
+    .filter(Boolean)
+    .filter((d) => d.error)
+    .map((d) => `${d.date}: ${d.error}`);
+
+  if (fetchErrors.length) {
+    console.error(`Fetch errors:\n  ${fetchErrors.join("\n  ")}`);
+    process.exitCode = 1;
+    return;
+  }
+
   const hadAnyData =
     today.toLondon.length +
       today.toSheffield.length +
       tomorrow.toLondon.length +
       tomorrow.toSheffield.length >
     0;
-  if (!hadAnyData) process.exit(1);
+  if (!hadAnyData) {
+    console.log(
+      "No EMR services for today or tomorrow (likely engineering works or " +
+        "disruption); published an empty report — this is not a failure."
+    );
+  }
 }
 
 main().catch((err) => {
