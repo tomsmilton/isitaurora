@@ -68,6 +68,28 @@ node aurora.mjs --json | jq    # machine-readable
 `aurora --help` lists everything. Point it at another feed with
 `AURORA_URL=…` or `--url …`.
 
+### Just type `aurora`
+
+Add a shell function so you don't need the `curl`/`node` each time. This
+installer appends [`aurora.sh`](aurora.sh) to your shell rc (it caches the CLI
+in `~/.cache/isitaurora` and refreshes it once a day):
+
+```bash
+curl -fsSL https://tomsmilton.github.io/isitaurora/aurora.sh >> ~/.zshrc && exec zsh
+```
+
+Then just:
+
+```bash
+aurora               # today, Sheffield → London
+aurora next          # the next departure — is it an Aurora?
+aurora tomorrow both
+```
+
+Prefer a one-liner alias instead? `alias aurora='curl -fsSL
+https://tomsmilton.github.io/isitaurora/aurora.mjs | node -'` (re-downloads each
+run; args still work, e.g. `aurora next`).
+
 ## Development
 
 ```bash
