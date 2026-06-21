@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Is it Aurora? — aurora(1) interactive</title>
+<style>
+  :root{
+    --page:#11131a; --term:#0d1017; --bar:#1b1f2a; --border:#2a3040;
+    --fg:#c5ccd8; --dim:#5d6677; --bright:#e8edf5;
+    --green:#43d17a; --yellow:#e6b34a; --blue:#5fb4ff; --red:#ff6b63; --magenta:#c792ea; --cyan:#56d4dd;
+    --prompt:#43d17a; --sel:#5fb4ff33;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--page);color:var(--fg)}
+  body{
+    font:13.5px/1.55 ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,"DejaVu Sans Mono",monospace;
+    -webkit-font-smoothing:antialiased; padding:22px 16px 60px; font-variant-numeric:tabular-nums;
+  }
+  ::selection{background:var(--sel)}
+  .wrap{max-width:1000px;margin:0 auto}
+  .window{border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--term);box-shadow:0 28px 70px -34px #000}
+  .titlebar{display:flex;align-items:center;gap:8px;padding:11px 14px;background:var(--bar);border-bottom:1px solid var(--border)}
+  .dot{width:12px;height:12px;border-radius:50%}
+  .d1{background:#ff5f57}.d2{background:#febc2e}.d3{background:#28c840}
+  .title{margin-left:8px;color:var(--dim);font-size:12px;letter-spacing:.02em}
+  .title b{color:var(--fg);font-weight:600}
+  .title .ctx{color:var(--cyan)}
+
+  .body{height:min(74vh,680px);overflow-y:auto;overflow-x:auto;padding:14px 16px 16px;cursor:text}
+  #scroll{min-width:0}
+  .blk{white-space:pre-wrap;word-break:break-word}
+  .tbl{white-space:pre;min-width:760px}
+  .echo{margin-top:4px}
+  .gap{height:.55em}
+
+  .ps1{color:var(--prompt);font-weight:700;white-space:nowrap}
+  .ps1 .at{color:var(--dim);font-weight:400}
+  .ps1 .ctx{color:var(--cyan);font-weight:700}
+  .inputline{display:flex;align-items:baseline;gap:8px;margin-top:4px}
+  #cmd{
+    flex:1;min-width:60px;appearance:none;border:0;outline:0;background:#0000;
+    color:var(--bright);font:inherit;caret-color:var(--green);padding:0;
+  }
+
+  /* boot banner */
+  .banner{color:var(--green);font-weight:700;line-height:1.2}
+  .banner .v{color:var(--dim);font-weight:400}
+
+  .c-prompt{color:var(--prompt);font-weight:700}
+  .c-flag{color:var(--cyan)} .c-val{color:var(--magenta)}
+  .c-comment,.c-dim{color:var(--dim)} .c-bright{color:var(--bright)}
+  .c-green{color:var(--green)} .c-yellow{color:var(--yellow)}
+  .c-blue{color:var(--blue)} .c-red{color:var(--red)} .c-magenta{color:var(--magenta)} .c-cyan{color:var(--cyan)}
+  .hdr{color:var(--dim)}
+  .badge-810{color:var(--green);font-weight:700}
+  .badge-222{color:var(--yellow);font-weight:700}
+  .badge-unknown{color:var(--dim);font-weight:700}
+  .cancel{color:var(--red);font-weight:700}
+  b.k{color:var(--cyan);font-weight:700}
+  .hl{background:var(--sel);border-radius:2px}
+
+  .hint{padding:9px 16px;border-top:1px solid var(--border);background:#ffffff04;color:var(--dim);font-size:12px;display:flex;flex-wrap:wrap;gap:5px}
+  .hint button{
+    appearance:none;border:1px solid var(--border);background:#0000;color:var(--cyan);
+    font:inherit;font-size:11.5px;padding:3px 9px;border-radius:6px;cursor:pointer;
+  }
+  .hint button:hover{background:#ffffff0a;color:var(--bright)}
+  .hint .lbl{color:var(--dim);align-self:center;margin-right:2px}
+
+  @media(max-width:560px){ body{padding:14px 9px 46px;font-size:12.5px} .title{font-size:11px} .body{height:72vh} }
+  @media(prefers-color-scheme:light){
+    :root{
+      --page:#e8e2d0;--term:#fdf6e3;--bar:#eee8d5;--border:#d9d2bf;
+      --fg:#586e75;--dim:#93a1a1;--bright:#073642;
+      --green:#2a9d2f;--yellow:#a6791a;--blue:#268bd2;--red:#dc322f;--magenta:#d33682;--cyan:#1f8a99;
+      --prompt:#2a9d2f;--sel:#268bd233;
+    }
+    .window{box-shadow:0 22px 50px -30px #00000040}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="window">
+    <div class="titlebar">
+      <span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span>
+      <span class="title"><b>aurora</b> — is-it-aurora — <span class="ctx" id="winctx">today/to-london</span></span>
+    </div>
+    <div class="body" id="body">
+      <div id="scroll"></div>
+      <div class="inputline">
+        <span class="ps1" id="ps1"></span>
+        <input id="cmd" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="terminal input">
+      </div>
+    </div>
+    <div class="hint" id="hint">
+      <span class="lbl">try:</span>
+    </div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script>
+const ctx={date:"today",dir:"toLondon"};
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const stockLabel=c=>c==="810"?"Aurora":c==="222"?"Meridian":"Unknown";
+const pad=(s,n)=>{s=String(s);return s.length>=n?s.slice(0,n):s+" ".repeat(n-s.length);};
+const dirName=d=>d==="toLondon"?"to-london":"to-sheffield";
+const routeName=d=>d==="toLondon"?"Sheffield → London St Pancras":"London St Pancras → Sheffield";
+function fmtStamp(iso){return new Date(iso).toLocaleString("en-GB",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit",timeZone:"UTC"});}
+function dayFriendly(key){const d=new Date(EMR[key].date+"T00:00:00Z");return key+", "+d.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short",timeZone:"UTC"});}
+
+const body=document.getElementById("body");
+const scroll=document.getElementById("scroll");
+const input=document.getElementById("cmd");
+const ps1=document.getElementById("ps1");
+function ps1html(){return `<span class="at">aurora:</span><span class="ctx">${ctx.date.slice(0,3)}/${ctx.dir==="toLondon"?"lon":"shf"}</span><span class="at">$</span>`;}
+function syncPrompt(){ps1.innerHTML=ps1html()+" ";document.getElementById("winctx").textContent=ctx.date+"/"+dirName(ctx.dir);}
+function append(html,cls){const d=document.createElement("div");d.className="blk"+(cls?" "+cls:"");d.innerHTML=html;scroll.appendChild(d);}
+function gap(){const d=document.createElement("div");d.className="gap";scroll.appendChild(d);}
+function scrollDown(){body.scrollTop=body.scrollHeight;}
+
+function services(){return EMR[ctx.date][ctx.dir];}
+function statusStr(s){
+  if(s.cancelled) return ["CANCELLED","red"];
+  if(s.confidence==="predicted") return ["predicted","dim"];
+  const late=s.arrivalLatenessMin ?? s.departureLatenessMin;
+  if(s.actualDepartureTime==null && late==null) return ["expected","dim"];
+  if(late==null||late===0) return ["on time","green"];
+  if(late>0) return ["+"+late+"m late","yellow"];
+  return [(-late)+"m early","green"];
+}
+function cClass(s){return s.cancelled?"cancel":"badge-"+s.stockClass;}
+
+// box-drawing table for a list of services; optional highlighter(text)->text
+function table(rows,note){
+  const top   ="┌"+"─".repeat(7)+"┬"+"─".repeat(9)+"┬"+"─".repeat(6)+"┬"+"─".repeat(16)+"┬"+"─".repeat(7)+"┬"+"─".repeat(14)+"┐";
+  const sep   ="├"+"─".repeat(7)+"┼"+"─".repeat(9)+"┼"+"─".repeat(6)+"┼"+"─".repeat(16)+"┼"+"─".repeat(7)+"┼"+"─".repeat(14)+"┤";
+  const bottom="└"+"─".repeat(7)+"┴"+"─".repeat(9)+"┴"+"─".repeat(6)+"┴"+"─".repeat(16)+"┴"+"─".repeat(7)+"┴"+"─".repeat(14)+"┘";
+  const hdr="│ "+pad("DEP",5)+" │ "+pad("ARR",7)+" │ "+pad("PLAT",4)+" │ "+pad("STOCK",14)+" │ "+pad("COACH",5)+" │ "+pad("STATUS",12)+" │";
+  let L=[`<span class="hdr">${top}</span>`,`<span class="hdr">${hdr}</span>`,`<span class="hdr">${sep}</span>`];
+  if(!rows.length){
+    L.push(`<span class="c-dim">│  ${pad(note||"no matching services",70)}│</span>`);
+  }else{
+    for(const s of rows){
+      const [st,stc]=statusStr(s);
+      const stockTxt=(s.stockClass==="810"?"810 ":s.stockClass==="222"?"222 ":"??? ")+stockLabel(s.stockClass);
+      const coach=s.numberOfVehicles?(s.numberOfVehicles+"c"):"–";
+      const cc=cClass(s);
+      L.push(
+        `<span class="c-bright">│ </span><span class="${cc}">`+pad(s.departureTime,5)+`</span>`+
+        `<span class="c-bright"> │ </span><span class="c-dim">`+pad("→"+s.arrivalTime,7)+`</span>`+
+        `<span class="c-bright"> │ </span>`+pad(s.platform||"–",4)+
+        `<span class="c-bright"> │ </span><span class="${cc}">`+pad(stockTxt,14)+`</span>`+
+        `<span class="c-bright"> │ </span><span class="c-dim">`+pad(coach,5)+`</span>`+
+        `<span class="c-bright"> │ </span><span class="c-${stc}">`+pad(st,12)+`</span>`+
+        `<span class="c-bright"> │</span>`
+      );
+    }
+  }
+  L.push(`<span class="hdr">${bottom}</span>`);
+  return `<div class="tbl">${L.join("\n")}</div>`;
+}
+
+function counts(rows){
+  return {
+    n810:rows.filter(s=>s.stockClass==="810"&&!s.cancelled).length,
+    n222:rows.filter(s=>s.stockClass==="222"&&!s.cancelled).length,
+    nUnk:rows.filter(s=>s.stockClass==="unknown"&&!s.cancelled).length,
+    nCan:rows.filter(s=>s.cancelled).length,
+  };
+}
+function shareBar(n810,n222){
+  const tot=n810+n222||1, w=28, a=Math.round(w*n810/tot), m=w-a;
+  return `<span class="c-green">${"█".repeat(a)}</span><span class="c-yellow">${"█".repeat(m)}</span>`;
+}
+
+// ---- commands ----------------------------------------------------------
+const COMMANDS={};
+function cmd(name,desc,run,aliases){COMMANDS[name]={desc,run};(aliases||[]).forEach(a=>COMMANDS[a]={alias:name,desc,run});}
+
+cmd("help","list commands",()=>{
+  const rows=[
+    ["ls [810|222|aurora|meridian|cancelled|late]","list trains for the current view"],
+    ["grep <text>","search across time, stock, platform, status, destination"],
+    ["next [aurora]","the next departure (or next Aurora)"],
+    ["aurora","verdict — is it Aurora on this view?"],
+    ["stats","counts, Aurora share, punctuality"],
+    ["date [today|tomorrow]","show or change the day"],
+    ["dir [london|sheffield]","show or change direction"],
+    ["about","what this is + where the data is from"],
+    ["clear","clear the screen"],
+  ];
+  append(`<span class="c-comment"># commands — context shown in the prompt, e.g. </span><span class="c-cyan">aurora:tod/lon$</span>`);
+  rows.forEach(([c,d])=>append(`  <b class="k">${pad(c,44)}</b><span class="c-dim">${esc(d)}</span>`));
+});
+
+cmd("about","about",()=>{
+  append(`<span class="c-bright">Is it Aurora?</span> <span class="c-dim">— EMR ${esc(routeName(ctx.dir))}</span>`);
+  append(`<span class="c-dim">Tells you whether each Sheffield⇄London service runs as a</span>`);
+  append(`<span class="c-green">Class 810 "Aurora"</span><span class="c-dim"> (new electric — the nice one) or a </span><span class="c-yellow">Class 222 "Meridian"</span><span class="c-dim"> (older diesel).</span>`);
+  append(`<span class="c-dim">data from </span><span class="c-bright">${esc(fmtStamp(EMR.generatedAt))}</span><span class="c-dim">  ·  source: Realtime Trains</span>`);
+});
+
+function lsFilter(rows,arg){
+  if(!arg) return rows;
+  arg=arg.toLowerCase();
+  if(arg==="810"||arg==="aurora") return rows.filter(s=>s.stockClass==="810");
+  if(arg==="222"||arg==="meridian") return rows.filter(s=>s.stockClass==="222");
+  if(arg==="cancelled"||arg==="cancel") return rows.filter(s=>s.cancelled);
+  if(arg==="late") return rows.filter(s=>(s.arrivalLatenessMin??0)>0);
+  if(arg==="unknown") return rows.filter(s=>s.stockClass==="unknown");
+  return rows;
+}
+cmd("ls","list trains",(args)=>{
+  const rows=lsFilter(services(),args[0]);
+  append(`<span class="c-comment"># ${esc(routeName(ctx.dir))} · ${esc(dayFriendly(ctx.date))} · ${rows.length} service${rows.length===1?"":"s"}${args[0]?` · filter=${esc(args[0])}`:""}</span>`);
+  append(table(rows,args[0]?`no services match "${esc(args[0])}"`:"no services — likely engineering works"));
+},["list","trains","board","l"]);
+
+function haystack(s){
+  const [st]=statusStr(s);
+  return [s.departureTime,s.arrivalTime,"plat "+(s.platform||""),s.platform||"",
+    s.stockClass,stockLabel(s.stockClass),s.stockClass==="810"?"aurora electric":"",
+    s.stockClass==="222"?"meridian diesel":"",s.origin,s.destination,st,
+    s.cancelled?"cancelled":"",(s.numberOfVehicles||"")+"c",s.confidence].join(" ").toLowerCase();
+}
+cmd("grep","search",(args)=>{
+  const q=args.join(" ").trim();
+  if(!q){append(`<span class="c-red">usage:</span> grep &lt;text&gt;  <span class="c-dim">e.g. grep 09  ·  grep aurora  ·  grep plat 5  ·  grep late</span>`);return;}
+  const ql=q.toLowerCase();
+  const rows=services().filter(s=>haystack(s).includes(ql));
+  append(`<span class="c-comment"># grep "</span><span class="c-magenta">${esc(q)}</span><span class="c-comment">" in ${esc(dayFriendly(ctx.date))} · ${esc(dirName(ctx.dir))} → ${rows.length} match${rows.length===1?"":"es"}</span>`);
+  append(table(rows,`nothing matched "${esc(q)}" — try: aurora · cancelled · 09 · plat 5 · late`));
+},["search","find","g"]);
+
+function nowMin(){ // notional "now" from the data timestamp on today; start-of-day for tomorrow
+  if(ctx.date!=="today") return -1;
+  const m=EMR.generatedAt.match(/T(\d{2}):(\d{2})/); return m?(+m[1]*60+ +m[2]):-1;
+}
+const toMin=t=>{const m=String(t).match(/(\d{2}):(\d{2})/);return m?(+m[1]*60+ +m[2]):0;};
+cmd("next","next departure",(args)=>{
+  const wantA=(args[0]||"").toLowerCase().startsWith("a");
+  const now=nowMin();
+  let pool=services().filter(s=>!s.cancelled && (!wantA||s.stockClass==="810"));
+  let up=pool.filter(s=>toMin(s.departureTime)>=now);
+  const s=(up[0]||pool[0]);
+  if(!s){append(`<span class="c-yellow">no ${wantA?"Aurora ":""}departures on this view.</span>`);return;}
+  const isA=s.stockClass==="810";
+  append(`<span class="c-comment"># next ${wantA?"Aurora ":""}departure${now>=0?` after ${String((now/60|0)).padStart(2,"0")}:${String(now%60).padStart(2,"0")}`:""}</span>`);
+  append(`  <span class="${cClass(s)}">${s.departureTime}</span> <span class="c-dim">→ ${s.arrivalTime}</span>  <span class="c-bright">${esc(s.origin)} → ${esc(s.destination)}</span>`);
+  append(`  ${isA?`<span class="c-green">● it's a Class 810 Aurora ⚡</span>`:s.stockClass==="222"?`<span class="c-yellow">● it's a Class 222 Meridian</span>`:`<span class="c-dim">● stock unknown</span>`}`+
+    `<span class="c-dim">  ·  ${esc(s.confidence)}${s.platform?` · plat ${esc(s.platform)}`:""}${s.numberOfVehicles?` · ${s.numberOfVehicles} coaches`:""}</span>`);
+},["n"]);
+
+cmd("aurora","verdict",()=>{
+  const {n810,n222,nUnk,nCan}=counts(services());
+  const verdict=n810>n222?`<span class="c-green">✔ YES — mostly Aurora on this view ⚡</span>`
+    :n810>0?`<span class="c-yellow">~ MIXED — ${n810} Aurora vs ${n222} Meridian</span>`
+    :`<span class="c-yellow">✘ NO — all Meridian on this view</span>`;
+  append(`<span class="c-comment"># ${esc(routeName(ctx.dir))} · ${esc(dayFriendly(ctx.date))}</span>`);
+  append(`  ${shareBar(n810,n222)}  <span class="c-dim">${Math.round(100*n810/((n810+n222)||1))}% Aurora</span>`);
+  append(`  ${verdict}`);
+},["verdict","isit","?"]);
+
+cmd("stats","summary",()=>{
+  const rows=services(); const {n810,n222,nUnk,nCan}=counts(rows);
+  const tracked=rows.filter(s=>s.arrivalLatenessMin!=null);
+  const onTime=tracked.filter(s=>s.arrivalLatenessMin<=5).length;
+  const perf=tracked.length?Math.round(100*onTime/tracked.length):null;
+  append(`<span class="c-comment"># stats · ${esc(dayFriendly(ctx.date))} · ${esc(dirName(ctx.dir))}</span>`);
+  append(`  services  <span class="c-bright">${rows.length}</span>`);
+  append(`  aurora    <span class="c-green">${n810}</span>  ${shareBar(n810,n222)}  <span class="c-dim">${Math.round(100*n810/((n810+n222)||1))}%</span>`);
+  append(`  meridian  <span class="c-yellow">${n222}</span>`);
+  if(nUnk) append(`  unknown   <span class="c-dim">${nUnk}</span>`);
+  append(`  cancelled <span class="c-red">${nCan}</span>`);
+  append(`  on-time   ${perf==null?`<span class="c-dim">n/a (no realtime yet)</span>`:`<span class="c-${perf>=80?"green":perf>=50?"yellow":"red"}">${perf}%</span> <span class="c-dim">(≤5 min late, ${tracked.length} tracked)</span>`}`);
+},["summary","stat"]);
+
+cmd("date","set day",(args)=>{
+  const a=(args[0]||"").toLowerCase();
+  if(!a){append(`<span class="c-dim">date = </span><span class="c-magenta">${ctx.date}</span> <span class="c-dim">(${EMR[ctx.date].date}). usage: date today|tomorrow</span>`);return;}
+  if(a==="today"||a==="tomorrow"){ctx.date=a;syncPrompt();append(`<span class="c-dim">date → </span><span class="c-magenta">${a}</span> <span class="c-dim">(${EMR[a].date})</span>`);}
+  else append(`<span class="c-red">date: ${esc(a)}? use today|tomorrow</span>`);
+},["d"]);
+cmd("dir","set direction",(args)=>{
+  const a=(args[0]||"").toLowerCase();
+  if(!a){append(`<span class="c-dim">dir = </span><span class="c-magenta">${dirName(ctx.dir)}</span> <span class="c-dim">. usage: dir london|sheffield</span>`);return;}
+  if(/^(l|lon|london|to-?london|stp)/.test(a)){ctx.dir="toLondon";}
+  else if(/^(s|shf|sheff|sheffield|to-?sheffield)/.test(a)){ctx.dir="toSheffield";}
+  else {append(`<span class="c-red">dir: ${esc(a)}? use london|sheffield</span>`);return;}
+  syncPrompt();append(`<span class="c-dim">dir → </span><span class="c-magenta">${dirName(ctx.dir)}</span>`);
+});
+cmd("clear","clear",()=>{scroll.innerHTML="";},["cls"]);
+cmd("echo","echo",(a)=>append(esc(a.join(" "))));
+cmd("whoami","",()=>append(`<span class="c-dim">a traveller wondering whether the 0930 is an Aurora.</span>`));
+
+// ---- REPL --------------------------------------------------------------
+const history=[]; let hi=0;
+function run(line){
+  const echo=document.createElement("div");
+  echo.className="blk echo";
+  echo.innerHTML=ps1html()+" <span class='c-bright'>"+esc(line)+"</span>";
+  scroll.appendChild(echo);
+  const parts=line.trim().split(/\s+/);
+  const name=(parts[0]||"").toLowerCase();
+  const args=parts.slice(1);
+  if(name===""){ /* blank */ }
+  else if(COMMANDS[name]){ COMMANDS[name].run(args); }
+  else { append(`<span class="c-red">aurora: command not found:</span> ${esc(name)} <span class="c-dim">— type </span><b class="k">help</b>`); }
+  gap(); scrollDown();
+}
+function submit(line){
+  if(line.trim()){history.push(line);hi=history.length;}
+  run(line);
+}
+input.addEventListener("keydown",e=>{
+  if(e.key==="Enter"){const v=input.value;input.value="";submit(v);}
+  else if(e.key==="ArrowUp"){if(history.length){hi=Math.max(0,hi-1);input.value=history[hi]||"";e.preventDefault();setTimeout(()=>input.setSelectionRange(input.value.length,input.value.length));}}
+  else if(e.key==="ArrowDown"){if(history.length){hi=Math.min(history.length,hi+1);input.value=history[hi]||"";e.preventDefault();}}
+  else if(e.key==="Tab"){e.preventDefault();const cur=input.value.trim().toLowerCase();const names=Object.keys(COMMANDS).filter(n=>!COMMANDS[n].alias);const m=names.filter(n=>n.startsWith(cur));if(m.length===1)input.value=m[0]+" ";else if(m.length>1){append(`<span class="c-dim">${m.join("  ")}</span>`);gap();scrollDown();}}
+  else if(e.key==="l"&&e.ctrlKey){e.preventDefault();scroll.innerHTML="";}
+});
+body.addEventListener("mousedown",e=>{ if(e.target.tagName!=="BUTTON" && getSelection().isCollapsed) setTimeout(()=>input.focus()); });
+
+// quick-try chips
+const HINTS=["ls","grep aurora","next aurora","stats","grep cancelled","date tomorrow","help"];
+const hint=document.getElementById("hint");
+HINTS.forEach(h=>{const b=document.createElement("button");b.textContent=h;b.onclick=()=>{input.value="";submit(h);input.focus();};hint.appendChild(b);});
+
+// ---- boot --------------------------------------------------------------
+syncPrompt();
+append(`<span class="banner">  ▟▙ Is it Aurora?  <span class="v">aurora 1.0 · EMR Sheffield ⇄ London · interactive</span></span>`);
+append(`<span class="c-dim">data from <span class="c-bright">${esc(fmtStamp(EMR.generatedAt))}</span>. Type <b class="k">help</b> for commands, or tap a chip below.</span>`);
+gap();
+run("aurora");
+run("grep aurora");
+input.focus();
+scrollDown();
+</script>
+</body>
+</html>

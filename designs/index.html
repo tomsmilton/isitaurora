@@ -57,11 +57,11 @@
 <div class="wrap">
   <header>
     <div class="eyebrow">Is it Aurora? — design lab</div>
-    <h1>Ten ways to read the board</h1>
+    <h1>Eleven ways to read the board</h1>
     <p class="lead">Experimental redesigns of the EMR Sheffield ⇄ London page, each
     trying a different way to help you grok — at a glance — whether your train is a
     Class&nbsp;810 <b>Aurora</b> or a Class&nbsp;222 <b>Meridian</b>, when it runs, and
-    whether it's on time. All ten share the same real sample data (19&nbsp;Jun&nbsp;2026).</p>
+    whether it's on time. All eleven share the same real sample data (19&nbsp;Jun&nbsp;2026).</p>
     <div class="meta">
       <span class="dot">Static mockups · sample data</span>
       <span><a href="../">← Back to the live page</a></span>
@@ -83,6 +83,7 @@ const variants=[
   ["05","05-editorial.html","Editorial","A printed rail gazette — serif headlines, typographic and calm."],
   ["06","06-dashboard.html","Dashboard","Stat cards: Aurora share, cancellations and punctuality at a glance."],
   ["07","07-terminal.html","Terminal","A command-line readout with ANSI colour for each stock class."],
+  ["11","11-terminal-repl.html","Terminal — live","An interactive shell: type ls, grep, next, stats — search the timetable for real."],
   ["08","08-glass.html","Frosted glass","Translucent iOS-style cards over a soft gradient mesh."],
   ["09","09-signage.html","Rail signage","National Rail platform-sign language — navy, bold, official."],
   ["10","10-journey.html","Journey line","A vertical route-map; the spine alternates colour by stock."],
@@ -91,7 +92,7 @@ document.getElementById("grid").innerHTML=variants.map(([n,href,title,desc])=>`
   <a class="card" href="${href}">
     <div class="shot" style="background-image:url('thumbs/${n}.png')"></div>
     <div class="body">
-      <div class="num">${n} / 10</div>
+      <div class="num">${n} / 11</div>
       <h2>${title}</h2>
       <p>${desc}</p>
     </div>
