@@ -14,7 +14,59 @@ A single Node 22+ script (`generate.mjs`, no dependencies) that:
 3. For each EMR passenger service, scrapes the RTT website for stock
    identification — preferring "Know Your Train" confirmed formation data,
    falling back to the CIF "Pathed as" power type for predictions.
-4. Writes `index.html` with client-side filters (date, direction, stock class).
+4. Writes `index.html` with client-side filters (date, direction, stock class),
+   a machine-readable `data.json` feed, and appends the run to `ledger.csv`.
+
+It tolerates disruption: a day with no services (engineering works, full-line
+cancellation, or tomorrow's schedule not yet published) is published as a normal
+"no services" result rather than failing the run, and transient API/network
+errors are retried before a direction or day is given up on.
+
+## URLs
+
+GitHub Pages serves `main` at the root —
+[`tomsmilton.github.io/isitaurora`](https://tomsmilton.github.io/isitaurora/):
+
+| Path | What |
+| --- | --- |
+| `/` | Live board — today & tomorrow, Aurora vs Meridian |
+| `/directory/` | Index of every page (live board + experiments) |
+| `/designs/` | Gallery of the design experiments |
+| `/designs/01-departure-board.html` | Solari split-flap departure board |
+| `/designs/02-boarding-pass.html` | Boarding-pass / ticket stubs |
+| `/designs/03-timeline.html` | Day plotted on a time ribbon |
+| `/designs/04-big-answer.html` | One giant YES / NO |
+| `/designs/05-editorial.html` | Broadsheet rail gazette |
+| `/designs/06-dashboard.html` | Stats dashboard |
+| `/designs/07-terminal.html` | Static terminal readout |
+| `/designs/08-glass.html` | Frosted-glass cards |
+| `/designs/09-signage.html` | National Rail signage |
+| `/designs/10-journey.html` | Vertical route-map line |
+| `/designs/11-terminal-repl.html` | Interactive terminal (type `ls`, `grep`, `next`…) |
+| `/data.json` | Machine-readable feed (today + tomorrow) |
+| `/ledger.csv` | Full historical log of every observation |
+| `/aurora.mjs` | The terminal tool (below) |
+
+## Terminal tool (`aurora`)
+
+A little Node CLI that prints the board in your terminal. It just reads
+`/data.json` from the site — **no API token, no dependencies**:
+
+```bash
+# run it straight from the web
+curl -fsSL https://tomsmilton.github.io/isitaurora/aurora.mjs | node - both
+
+# or save it and run locally
+curl -fsSLO https://tomsmilton.github.io/isitaurora/aurora.mjs
+node aurora.mjs                # today, Sheffield → London
+node aurora.mjs tomorrow both  # tomorrow, both directions
+node aurora.mjs next           # just the next departure
+node aurora.mjs --stock aurora # only the Class 810s
+node aurora.mjs --json | jq    # machine-readable
+```
+
+`aurora --help` lists everything. Point it at another feed with
+`AURORA_URL=…` or `--url …`.
 
 ## Development
 

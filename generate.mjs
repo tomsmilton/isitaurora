@@ -968,6 +968,13 @@ async function main() {
   await writeFile("index.html", html, "utf8");
   console.log(`Wrote index.html (${html.length} bytes)`);
 
+  // Public machine-readable feed, served by Pages at /data.json. This is what
+  // the `aurora` CLI (and anything else) reads, so no RTT token is needed
+  // downstream — the daily job is the only thing that talks to RTT.
+  const feed = { generatedAt, today, tomorrow };
+  await writeFile("data.json", JSON.stringify(feed, null, 2) + "\n", "utf8");
+  console.log("Wrote data.json");
+
   // Yesterday goes into the ledger but never the page.
   const ledgerDays = yesterday ? [yesterday, today, tomorrow] : [today, tomorrow];
   const ledgerRows = await appendLedger(generatedAt, ledgerDays);
