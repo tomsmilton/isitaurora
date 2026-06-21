@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Is it Aurora? — Dashboard</title>
+<style>
+  :root{
+    --bg:#f7f8fa; --panel:#ffffff; --ink:#0b0e14; --ink2:#3d4453; --mut:#838b9b;
+    --line:#e8eaef; --line2:#f0f1f5; --hover:#f6f8fc;
+    --aurora:#2563ff; --aurora-ink:#1545c4; --aurora-soft:#eaf0ff;
+    --meridian:#e08800; --meridian-ink:#9a5d00; --meridian-soft:#fdf2db;
+    --unknown:#98a0b0; --unknown-soft:#eef0f4;
+    --red:#e11d48; --red-soft:#fde7ec; --green:#0e9f57; --green-soft:#e3f6ec;
+    --shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px -16px rgba(16,24,40,.25);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink)}
+  body{font:13.5px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;padding:24px 20px 60px}
+  .wrap{max-width:1160px;margin:0 auto}
+  .tnum{font-variant-numeric:tabular-nums}
+
+  header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:20px}
+  .logo{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--aurora),#5b8cff);
+    display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:17px;box-shadow:0 6px 16px -6px var(--aurora)}
+  .ttl h1{margin:0;font-size:19px;font-weight:800;letter-spacing:-.02em}
+  .ttl .s{font-size:12px;color:var(--mut);font-weight:600;margin-top:1px}
+  .meta{margin-left:auto;text-align:right;font-size:12px;color:var(--mut)}
+  .meta b{display:block;color:var(--ink);font-weight:700;font-size:13px;margin-top:1px}
+  .meta .live{color:var(--green);font-weight:700}
+
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+  .seg{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px;box-shadow:var(--shadow)}
+  .seg button{appearance:none;border:0;background:transparent;color:var(--ink2);font:inherit;font-size:12.5px;font-weight:650;
+    padding:6px 12px;border-radius:7px;cursor:pointer;white-space:nowrap}
+  .seg button.on{background:var(--ink);color:#fff}
+  .seg.acc button.on{background:var(--aurora)}
+
+  /* stat hero */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 17px;box-shadow:var(--shadow);min-height:118px;display:flex;flex-direction:column}
+  .stat .k{font-size:11.5px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
+  .stat .v{font-size:34px;font-weight:800;letter-spacing:-.02em;margin-top:6px;line-height:1}
+  .stat .d{font-size:12px;color:var(--ink2);margin-top:auto;padding-top:8px;font-weight:600}
+  .stat .d .up{color:var(--green)}.stat .d .dn{color:var(--red)}
+
+  /* split stat: aurora share donut */
+  .stat.share{flex-direction:row;align-items:center;gap:16px}
+  .donut{position:relative;width:78px;height:78px;flex:none}
+  .donut svg{transform:rotate(-90deg);display:block}
+  .donut .ctr{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .donut .ctr b{font-size:18px;font-weight:800;line-height:1}
+  .donut .ctr span{font-size:9px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+  .share .leg{display:flex;flex-direction:column;gap:7px;font-size:12px;font-weight:650}
+  .share .leg .r{display:flex;align-items:center;gap:8px}
+  .share .leg i{width:10px;height:10px;border-radius:3px}
+  .share .leg .ca{background:var(--aurora)}.share .leg .cm{background:var(--meridian)}.share .leg .cu{background:var(--unknown)}
+  .share .leg em{color:var(--mut);font-style:normal;font-weight:700;margin-left:auto;padding-left:10px}
+
+  /* OTP bar inside stat */
+  .otpbar{height:8px;border-radius:5px;background:var(--line);overflow:hidden;margin-top:10px}
+  .otpbar i{display:block;height:100%;background:linear-gradient(90deg,var(--green),#2ec27e);border-radius:5px}
+
+  /* table */
+  .tablecard{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+  .tablecard .th{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid var(--line2)}
+  .tablecard .th h2{margin:0;font-size:14px;font-weight:750}
+  .tablecard .th .cnt{font-size:12px;color:var(--mut);font-weight:600}
+  .stockfilter{margin-left:auto;display:inline-flex;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:2px}
+  .stockfilter button{appearance:none;border:0;background:transparent;color:var(--ink2);font:inherit;font-size:11.5px;font-weight:650;padding:5px 11px;border-radius:7px;cursor:pointer}
+  .stockfilter button.on{background:var(--panel);box-shadow:0 1px 2px rgba(0,0,0,.08);color:var(--ink)}
+
+  table{width:100%;border-collapse:collapse}
+  thead th{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);font-weight:700;
+    text-align:left;padding:10px 18px;border-bottom:1px solid var(--line2);background:var(--line2);cursor:pointer;user-select:none;white-space:nowrap}
+  thead th.r{text-align:right}
+  thead th .ar{opacity:.45;font-size:9px;margin-left:3px}
+  thead th.sorted .ar{opacity:1;color:var(--ink)}
+  tbody td{padding:11px 18px;border-bottom:1px solid var(--line2);vertical-align:middle}
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr:hover{background:var(--hover)}
+  .c-time .t{font-size:16px;font-weight:800}
+  .c-time .a{font-size:11px;color:var(--mut);font-weight:600}
+  .route b{font-weight:650}
+  .route .ch{margin-top:4px;display:flex;gap:5px;flex-wrap:wrap}
+  .chip{font-size:10.5px;font-weight:650;color:var(--ink2);background:var(--line2);border:1px solid var(--line);border-radius:6px;padding:1px 7px}
+  .tag{display:inline-flex;align-items:center;gap:7px;font-weight:750;font-size:12.5px;padding:5px 10px;border-radius:8px;white-space:nowrap}
+  .tag .d{width:8px;height:8px;border-radius:50%}
+  .tag.aur{background:var(--aurora-soft);color:var(--aurora-ink)}.tag.aur .d{background:var(--aurora)}
+  .tag.mer{background:var(--meridian-soft);color:var(--meridian-ink)}.tag.mer .d{background:var(--meridian)}
+  .tag.unk{background:var(--unknown-soft);color:#5c6473}.tag.unk .d{background:var(--unknown)}
+  .conf{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);font-weight:700;margin-top:4px;display:block}
+
+  /* lateness mini-bar: center baseline, early left / late right */
+  .latecell{min-width:128px}
+  .latebar{position:relative;height:18px;border-radius:5px;background:var(--line2);overflow:hidden}
+  .latebar .mid{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--mut);opacity:.4}
+  .latebar i{position:absolute;top:3px;bottom:3px;border-radius:3px}
+  .latebar i.late{left:50%;background:var(--meridian)}
+  .latebar i.early{right:50%;background:var(--green)}
+  .latetxt{font-size:11px;font-weight:700;margin-top:3px;color:var(--ink2)}
+  .latetxt.l{color:var(--meridian-ink)}.latetxt.e{color:var(--green)}.latetxt.n{color:var(--mut)}
+
+  .status{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:12.5px}
+  .status .dt{width:8px;height:8px;border-radius:50%}
+  .status.ontime{color:var(--green)} .status.ontime .dt{background:var(--green)}
+  .status.late{color:var(--meridian-ink)} .status.late .dt{background:var(--meridian)}
+  .status.canc{color:var(--red)} .status.canc .dt{background:var(--red)}
+  .status.sched{color:var(--mut)} .status.sched .dt{background:var(--unknown)}
+  tr.cancrow .c-time .t,tr.cancrow .route b{text-decoration:line-through;color:var(--mut)}
+
+  /* mobile cards */
+  .mcard{display:none}
+  footer{max-width:1160px;margin:18px auto 0;text-align:center;font-size:11px;color:var(--mut)}
+
+  @media(max-width:860px){
+    .stats{grid-template-columns:repeat(2,1fr)}
+  }
+  @media(max-width:560px){
+    body{padding:16px 12px 48px}
+    .stats{grid-template-columns:1fr 1fr;gap:10px}
+    .stat{min-height:96px;padding:13px}
+    .stat .v{font-size:27px}
+    .stat.share{grid-column:1 / -1}
+    .meta{margin-left:0;width:100%;text-align:left;margin-top:4px}
+    table{display:none}
+    .stockfilter{margin-left:0}
+    .tablecard .th h2{width:100%}
+    .mcard{display:block;padding:6px 12px 12px}
+    .m-svc{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:10px;box-shadow:0 4px 14px -12px rgba(16,24,40,.4)}
+    .m-svc .top{display:flex;align-items:baseline;gap:9px}
+    .m-svc .top .t{font-size:20px;font-weight:800}
+    .m-svc .top .a{font-size:12px;color:var(--mut);font-weight:650}
+    .m-svc .top .status{margin-left:auto}
+    .m-svc .rt{margin-top:3px;font-weight:650}
+    .m-svc .row2{margin-top:9px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .m-svc .latewrap{margin-top:9px}
+    .m-svc.cancrow .top .t,.m-svc.cancrow .rt b{text-decoration:line-through;color:var(--mut)}
+  }
+
+  @media(prefers-color-scheme:dark){
+    :root{
+      --bg:#0a0d13; --panel:#13171f; --ink:#eef1f7; --ink2:#aab2c2; --mut:#7b8497;
+      --line:#222834; --line2:#1a1f29; --hover:#181d27;
+      --aurora:#4d86ff; --aurora-ink:#a7c4ff; --aurora-soft:#15243d;
+      --meridian:#eda01f; --meridian-ink:#f3c06e; --meridian-soft:#2c2310;
+      --unknown:#828b9e; --unknown-soft:#1a1f29;
+      --red:#fb5277; --red-soft:#2c1118; --green:#28c780; --green-soft:#0f2a1d;
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px -18px #000;
+    }
+    .seg button.on{color:#fff}
+    thead th{background:var(--line2)}
+    .logo{box-shadow:0 6px 16px -8px var(--aurora)}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">A</div>
+    <div class="ttl">
+      <h1>Is it Aurora?</h1>
+      <div class="s">EMR · Sheffield ⇄ London St Pancras · service analytics</div>
+    </div>
+    <div class="meta"><span class="live">● live</span> data from <b id="updated"></b></div>
+  </header>
+
+  <div class="controls">
+    <div class="seg" id="dateSeg">
+      <button data-k="date" data-v="today" class="on">Today</button>
+      <button data-k="date" data-v="tomorrow">Tomorrow</button>
+    </div>
+    <div class="seg" id="dirSeg">
+      <button data-k="dir" data-v="toLondon" class="on">→ London</button>
+      <button data-k="dir" data-v="toSheffield">→ Sheffield</button>
+    </div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="tablecard">
+    <div class="th">
+      <h2 id="tabtitle">Services</h2>
+      <span class="cnt" id="tabcount"></span>
+      <div class="stockfilter" id="stkSeg">
+        <button data-v="all" class="on">All</button>
+        <button data-v="810">Aurora</button>
+        <button data-v="222">Meridian</button>
+      </div>
+    </div>
+    <table>
+      <thead><tr>
+        <th data-sort="dep" class="sorted">Depart <span class="ar">▲</span></th>
+        <th data-sort="route">Route</th>
+        <th data-sort="stock">Stock <span class="ar">▲</span></th>
+        <th data-sort="late">Lateness <span class="ar">▲</span></th>
+        <th data-sort="status" class="r">Status <span class="ar">▲</span></th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="mcard" id="mcard"></div>
+  </div>
+
+  <footer>Sample data · East Midlands Railway · "Is it Aurora?" design experiment</footer>
+</div>
+
+<script src="data.js"></script>
+<script>
+const state={date:"today",dir:"toLondon",stock:"all",sort:"dep",asc:true};
+const lab=c=>c==="810"?"Aurora":c==="222"?"Meridian":"Unknown";
+const cls=c=>c==="810"?"aur":c==="222"?"mer":"unk";
+const toMin=t=>{const[h,m]=t.split(":").map(Number);return h*60+m;};
+const stockOrder=c=>c==="810"?0:c==="222"?1:2;
+
+function fmtUpdated(iso){
+  const d=new Date(iso);
+  return d.toLocaleString("en-GB",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit",timeZone:"UTC"});
+}
+function statusInfo(s){
+  if(s.cancelled) return {k:"canc",rank:3,main:"Cancelled"};
+  const late=s.arrivalLatenessMin ?? s.departureLatenessMin;
+  if(s.actualDepartureTime==null && late==null) return {k:"sched",rank:0,main:"Scheduled"};
+  if(late==null) return {k:"ontime",rank:1,main:"On time"};
+  if(late<=0) return {k:"ontime",rank:1,main:late<0?`${-late}m early`:"On time"};
+  return {k:"late",rank:2,main:`+${late} late`};
+}
+
+function activeAll(){return EMR[state.date][state.dir];}
+function activeRows(){
+  let r=activeAll();
+  if(state.stock!=="all") r=r.filter(s=>s.stockClass===state.stock);
+  r=[...r];
+  const dir=state.asc?1:-1;
+  r.sort((a,b)=>{
+    let x,y;
+    switch(state.sort){
+      case "route": x=a.destination;y=b.destination; return x<y?-dir:x>y?dir:0;
+      case "stock": return (stockOrder(a.stockClass)-stockOrder(b.stockClass))*dir || toMin(a.departureTime)-toMin(b.departureTime);
+      case "late": x=a.arrivalLatenessMin??-999;y=b.arrivalLatenessMin??-999; return (x-y)*dir;
+      case "status": return (statusInfo(a).rank-statusInfo(b).rank)*dir || toMin(a.departureTime)-toMin(b.departureTime);
+      default: return (toMin(a.departureTime)-toMin(b.departureTime))*dir;
+    }
+  });
+  return r;
+}
+
+function donut(aPct){
+  const r=32,c=2*Math.PI*r;
+  const aLen=c*aPct/100;
+  return `<div class="donut">
+    <svg width="78" height="78" viewBox="0 0 78 78">
+      <circle cx="39" cy="39" r="${r}" fill="none" stroke="var(--meridian)" stroke-width="12"/>
+      <circle cx="39" cy="39" r="${r}" fill="none" stroke="var(--aurora)" stroke-width="12"
+        stroke-dasharray="${aLen} ${c}" stroke-linecap="butt"/>
+    </svg>
+    <div class="ctr"><b style="color:var(--aurora-ink)">${aPct}%</b><span>Aurora</span></div>
+  </div>`;
+}
+
+function renderStats(){
+  const all=activeAll();
+  const a=all.filter(s=>s.stockClass==="810").length;
+  const m=all.filter(s=>s.stockClass==="222").length;
+  const u=all.filter(s=>s.stockClass==="unknown").length;
+  const canc=all.filter(s=>s.cancelled).length;
+  const known=a+m||1;
+  const aPct=Math.round(a/known*100);
+  // OTP: of services with realtime arrival lateness, % with <=5 min
+  const withLate=all.filter(s=>!s.cancelled && s.arrivalLatenessMin!=null);
+  const onTime=withLate.filter(s=>s.arrivalLatenessMin<=5).length;
+  const otp=withLate.length?Math.round(onTime/withLate.length*100):null;
+
+  document.getElementById("stats").innerHTML=`
+    <div class="stat">
+      <div class="k">Total services</div>
+      <div class="v tnum">${all.length}</div>
+      <div class="d">${a+m} with known stock · <span class="dn">${canc} cancelled</span></div>
+    </div>
+    <div class="stat share">
+      ${donut(aPct)}
+      <div class="leg">
+        <div class="r"><i class="ca"></i>Aurora 810<em>${a}</em></div>
+        <div class="r"><i class="cm"></i>Meridian 222<em>${m}</em></div>
+        ${u?`<div class="r"><i class="cu"></i>Unknown<em>${u}</em></div>`:""}
+      </div>
+    </div>
+    <div class="stat">
+      <div class="k">On-time perf.</div>
+      <div class="v tnum" style="color:var(--green)">${otp==null?"—":otp+"%"}</div>
+      <div class="otpbar"><i style="width:${otp==null?0:otp}%"></i></div>
+      <div class="d" style="padding-top:8px">arr ≤ 5 min · ${withLate.length} tracked</div>
+    </div>
+    <div class="stat">
+      <div class="k">Cancelled</div>
+      <div class="v tnum" style="color:${canc?"var(--red)":"var(--ink)"}">${canc}</div>
+      <div class="d">${Math.round(canc/all.length*100)}% of the day's services</div>
+    </div>`;
+}
+
+function svcRoute(s){return s.origin.replace(" International","")+" → "+s.destination.replace(" International","");}
+function chipsHtml(s){
+  const c=[];
+  if(s.platform) c.push("Plat "+s.platform);
+  if(s.numberOfVehicles) c.push(s.numberOfVehicles+" coach");
+  if(s.unitNumber) c.push("Unit "+s.unitNumber);
+  return c.map(x=>`<span class="chip">${x}</span>`).join("");
+}
+function lateCell(s){
+  if(s.cancelled) return {bar:`<div class="latebar"><div class="mid"></div></div>`,txt:`<div class="latetxt n">—</div>`};
+  const l=s.arrivalLatenessMin;
+  if(l==null) return {bar:`<div class="latebar"><div class="mid"></div></div>`,txt:`<div class="latetxt n">no data</div>`};
+  const w=Math.min(Math.abs(l)/15*50,50);
+  if(l>0) return {bar:`<div class="latebar"><div class="mid"></div><i class="late" style="width:${w}%"></i></div>`,txt:`<div class="latetxt l">+${l} min late</div>`};
+  if(l<0) return {bar:`<div class="latebar"><div class="mid"></div><i class="early" style="width:${w}%"></i></div>`,txt:`<div class="latetxt e">${-l} min early</div>`};
+  return {bar:`<div class="latebar"><div class="mid"></div></div>`,txt:`<div class="latetxt">on time</div>`};
+}
+
+function renderTable(){
+  const rows=activeRows();
+  document.getElementById("tabcount").textContent=`${rows.length} shown`;
+  const tb=document.getElementById("tbody");
+  tb.innerHTML=rows.map(s=>{
+    const st=statusInfo(s);const c=cls(s.stockClass);const lc=lateCell(s);
+    return `<tr class="${s.cancelled?"cancrow":""}">
+      <td class="c-time tnum"><div class="t">${s.departureTime}</div><div class="a">arr ${s.arrivalTime}</div></td>
+      <td class="route"><b>${svcRoute(s)}</b><div class="ch">${chipsHtml(s)}</div></td>
+      <td><span class="tag ${c}"><span class="d"></span>${lab(s.stockClass)}</span><span class="conf">${s.confidence}</span></td>
+      <td class="latecell">${lc.bar}${lc.txt}</td>
+      <td class="r" style="text-align:right"><span class="status ${st.k}"><span class="dt"></span>${st.main}</span></td>
+    </tr>`;
+  }).join("");
+
+  // mobile cards
+  document.getElementById("mcard").innerHTML=rows.map(s=>{
+    const st=statusInfo(s);const c=cls(s.stockClass);const lc=lateCell(s);
+    return `<div class="m-svc ${s.cancelled?"cancrow":""}">
+      <div class="top"><span class="t tnum">${s.departureTime}</span><span class="a tnum">arr ${s.arrivalTime}</span>
+        <span class="status ${st.k}"><span class="dt"></span>${st.main}</span></div>
+      <div class="rt"><b>${svcRoute(s)}</b></div>
+      <div class="row2"><span class="tag ${c}"><span class="d"></span>${lab(s.stockClass)}</span>${chipsHtml(s)}</div>
+      <div class="latewrap">${lc.bar}${lc.txt}</div>
+    </div>`;
+  }).join("");
+
+  // header sort indicators
+  document.querySelectorAll("thead th").forEach(th=>{
+    const on=th.dataset.sort===state.sort;
+    th.classList.toggle("sorted",on);
+    const ar=th.querySelector(".ar");
+    if(ar) ar.textContent=on?(state.asc?"▲":"▼"):"▲";
+  });
+}
+
+function render(){
+  document.getElementById("updated").textContent=fmtUpdated(EMR.generatedAt);
+  const d=new Date(EMR[state.date].date+"T00:00:00Z");
+  const dayStr=(state.date==="today"?"Today":"Tomorrow")+", "+d.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",timeZone:"UTC"});
+  const dirStr=state.dir==="toLondon"?"Sheffield → London":"London → Sheffield";
+  document.getElementById("tabtitle").textContent=`${dirStr} · ${dayStr}`;
+  renderStats();renderTable();
+}
+
+document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{
+  state[b.dataset.k]=b.dataset.v;
+  b.parentNode.querySelectorAll("button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on");render();
+}));
+document.querySelectorAll("#stkSeg button").forEach(b=>b.addEventListener("click",()=>{
+  state.stock=b.dataset.v;
+  b.parentNode.querySelectorAll("button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on");renderTable();
+}));
+document.querySelectorAll("thead th").forEach(th=>th.addEventListener("click",()=>{
+  const k=th.dataset.sort;
+  if(state.sort===k) state.asc=!state.asc; else {state.sort=k;state.asc=true;}
+  renderTable();
+}));
+render();
+</script>
+</body>
+</html>

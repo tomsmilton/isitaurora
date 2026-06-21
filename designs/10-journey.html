@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Is it Aurora? — Journey line</title>
+<style>
+  :root{
+    --bg:#f6f7fb; --panel:#ffffff; --ink:#0c1018; --ink2:#444c5d; --mut:#7e879a;
+    --line:#e6e9f1; --line2:#eff1f7;
+    --aurora:#1f74ff; --aurora-ink:#0e49c0; --aurora-soft:#e9f1ff; --aurora-glow:rgba(31,116,255,.45);
+    --meridian:#dd8500; --meridian-ink:#945a00; --meridian-soft:#fbf0d8; --meridian-glow:rgba(221,133,0,.35);
+    --unknown:#9aa2b3; --unknown-soft:#eef0f5;
+    --red:#e11d48; --green:#0e9f57;
+    --spine:18px;
+    --shadow:0 14px 40px -26px rgba(20,40,90,.4);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink)}
+  body{font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;padding:26px 20px 70px;
+    background:radial-gradient(110% 60% at 50% -8%,#eef3ff 0%,var(--bg) 55%)}
+  .wrap{max-width:760px;margin:0 auto}
+  .tnum{font-variant-numeric:tabular-nums;letter-spacing:.01em}
+
+  header{text-align:center;margin-bottom:18px}
+  header h1{margin:0;font-size:27px;font-weight:800;letter-spacing:-.02em}
+  header h1 .q{color:var(--aurora)}
+  header .sub{margin-top:5px;font-size:13px;color:var(--ink2);font-weight:600}
+  header .upd{margin-top:9px;font-size:12px;color:var(--mut)}
+  header .upd .live{color:var(--green);font-weight:700}
+  header .upd b{color:var(--ink);font-weight:700}
+
+  .controls{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;margin-bottom:16px}
+  .seg{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:3px;box-shadow:var(--shadow)}
+  .seg button{appearance:none;border:0;background:transparent;color:var(--ink2);font:inherit;font-size:12.5px;font-weight:650;
+    padding:7px 13px;border-radius:8px;cursor:pointer;white-space:nowrap}
+  .seg button.on{background:var(--ink);color:#fff}
+  .seg.acc button.on{background:var(--aurora)}
+
+  /* day banner + summary */
+  .banner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;
+    background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:12px 16px;box-shadow:var(--shadow);margin-bottom:8px}
+  .banner .day{font-weight:750;font-size:14px}
+  .banner .dirpill{font-size:12.5px;font-weight:700;color:var(--aurora-ink);background:var(--aurora-soft);border-radius:8px;padding:4px 10px}
+  .counts{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:22px}
+  .cpill{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;
+    background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:6px 13px;box-shadow:var(--shadow)}
+  .cpill i{width:10px;height:10px;border-radius:50%}
+  .cpill.a i{background:var(--aurora);box-shadow:0 0 7px var(--aurora-glow)}
+  .cpill.m i{background:var(--meridian)}
+  .cpill.u i{background:var(--unknown)}
+  .cpill.c i{background:transparent;border:2px solid var(--red)}
+
+  /* ===== the line ===== */
+  .line{position:relative;padding-left:var(--spine)}
+  .node{position:relative;padding:0 0 4px 40px;min-height:64px}
+  /* spine segment: between this node and the next */
+  .node::before{content:"";position:absolute;left:0;top:14px;bottom:-4px;width:5px;border-radius:3px;background:var(--seg,var(--unknown))}
+  .node:last-child::before{display:none}
+  /* the station dot */
+  .dot{position:absolute;left:-7px;top:7px;width:19px;height:19px;border-radius:50%;z-index:2;
+    border:4px solid var(--panel);box-shadow:0 0 0 2px var(--dotc,var(--unknown))}
+  .node.aur .dot{background:var(--aurora);box-shadow:0 0 0 2px var(--aurora),0 0 14px 1px var(--aurora-glow)}
+  .node.mer .dot{background:var(--meridian);box-shadow:0 0 0 2px var(--meridian),0 0 12px 1px var(--meridian-glow)}
+  .node.unk .dot{background:var(--unknown);box-shadow:0 0 0 2px var(--unknown)}
+  .node.canc .dot{background:var(--panel);box-shadow:0 0 0 2px var(--red)}
+  .node.canc .dot::after{content:"";position:absolute;left:50%;top:50%;width:15px;height:2.5px;background:var(--red);
+    transform:translate(-50%,-50%) rotate(-45deg);border-radius:2px}
+
+  .stop{display:flex;align-items:flex-start;gap:14px;background:var(--panel);border:1px solid var(--line);
+    border-radius:14px;padding:13px 16px;box-shadow:var(--shadow);margin-bottom:16px}
+  .stop.aur{border-color:#cfe1ff}
+  .stop.mer{border-color:#f1e1bd}
+  .times{flex:none;text-align:right;min-width:62px}
+  .times .dep{font-size:23px;font-weight:800;line-height:1.05}
+  .times .arr{font-size:12px;color:var(--mut);font-weight:650;margin-top:3px}
+  .body{flex:1;min-width:0}
+  .body .route{font-size:14.5px;font-weight:700}
+  .body .meta{margin-top:9px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .tag{display:inline-flex;align-items:center;gap:7px;font-weight:750;font-size:13px;padding:5px 11px;border-radius:9px;white-space:nowrap}
+  .tag .d{width:9px;height:9px;border-radius:50%}
+  .tag.aur{background:var(--aurora-soft);color:var(--aurora-ink)}.tag.aur .d{background:var(--aurora)}
+  .tag.mer{background:var(--meridian-soft);color:var(--meridian-ink)}.tag.mer .d{background:var(--meridian)}
+  .tag.unk{background:var(--unknown-soft);color:#5c6473}.tag.unk .d{background:var(--unknown)}
+  .conf{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);font-weight:700}
+  .chip{font-size:11.5px;font-weight:650;color:var(--ink2);background:var(--line2);border:1px solid var(--line);border-radius:7px;padding:2px 9px}
+  .status{flex:none;text-align:right;font-weight:750;font-size:13px;white-space:nowrap}
+  .status small{display:block;font-size:11px;color:var(--mut);font-weight:600;margin-top:2px}
+  .status.ontime{color:var(--green)}.status.late{color:var(--meridian-ink)}.status.canc{color:var(--red)}.status.sched{color:var(--mut)}
+  .stop.cancrow .times .dep,.stop.cancrow .body .route b{text-decoration:line-through;color:var(--mut)}
+
+  /* terminus caps */
+  .terminus{display:flex;align-items:center;gap:10px;font-weight:750;font-size:13px;color:var(--ink2);
+    padding-left:40px;position:relative;margin-bottom:14px}
+  .terminus.end{margin-top:2px}
+  .terminus .cap{position:absolute;left:-7px;width:19px;height:19px;border-radius:50%;border:4px solid var(--panel);
+    background:var(--ink);box-shadow:0 0 0 2px var(--ink)}
+  .terminus .ico{font-size:15px}
+
+  .empty{padding:40px;text-align:center;color:var(--mut)}
+  footer{margin:22px auto 0;text-align:center;font-size:11px;color:var(--mut)}
+
+  @media(max-width:560px){
+    body{padding:18px 12px 56px}
+    .stop{flex-wrap:wrap;gap:10px;padding:12px}
+    .times{text-align:left;min-width:0;order:1;display:flex;align-items:baseline;gap:8px}
+    .times .arr{margin-top:0}
+    .status{order:2;margin-left:auto;text-align:right}
+    .body{order:3;flex-basis:100%}
+    .node{padding-left:34px}
+    .terminus{padding-left:34px}
+  }
+
+  @media(prefers-color-scheme:dark){
+    :root{
+      --bg:#080b12; --panel:#121723; --ink:#eef2fb; --ink2:#aeb7c9; --mut:#828ca1;
+      --line:#222a3a; --line2:#1a2130;
+      --aurora:#519fff; --aurora-ink:#a8caff; --aurora-soft:#15243e; --aurora-glow:rgba(81,159,255,.5);
+      --meridian:#eda223; --meridian-ink:#f3c473; --meridian-soft:#2c2410; --meridian-glow:rgba(237,162,35,.4);
+      --unknown:#828ca1; --unknown-soft:#1a2130;
+      --red:#fb5277; --green:#2ec985;
+      --shadow:0 16px 44px -28px #000;
+    }
+    body{background:radial-gradient(110% 60% at 50% -8%,#101a2c 0%,var(--bg) 55%)}
+    .seg button.on{color:#fff}
+    .terminus .cap{background:var(--ink2);box-shadow:0 0 0 2px var(--ink2)}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Is it <span class="q">Aurora?</span></h1>
+    <div class="sub">EMR · Sheffield ⇄ London St Pancras · follow the line</div>
+    <div class="upd"><span class="live">● live</span> data from <b id="updated"></b></div>
+  </header>
+
+  <div class="controls">
+    <div class="seg" id="dateSeg">
+      <button data-k="date" data-v="today" class="on">Today</button>
+      <button data-k="date" data-v="tomorrow">Tomorrow</button>
+    </div>
+    <div class="seg" id="dirSeg">
+      <button data-k="dir" data-v="toLondon" class="on">→ London</button>
+      <button data-k="dir" data-v="toSheffield">→ Sheffield</button>
+    </div>
+    <div class="seg acc" id="stkSeg">
+      <button data-k="stock" data-v="all" class="on">All</button>
+      <button data-k="stock" data-v="810">Aurora</button>
+      <button data-k="stock" data-v="222">Meridian</button>
+    </div>
+  </div>
+
+  <div class="banner" id="banner"></div>
+  <div class="counts" id="counts"></div>
+
+  <div class="line" id="line"></div>
+
+  <footer>Sample data · East Midlands Railway · "Is it Aurora?" design experiment</footer>
+</div>
+
+<script src="data.js"></script>
+<script>
+const state={date:"today",dir:"toLondon",stock:"all"};
+const lab=c=>c==="810"?"Aurora":c==="222"?"Meridian":"Unknown";
+const cls=c=>c==="810"?"aur":c==="222"?"mer":"unk";
+const stockColor=c=>c==="810"?"var(--aurora)":c==="222"?"var(--meridian)":"var(--unknown)";
+
+function fmtUpdated(iso){
+  const d=new Date(iso);
+  return d.toLocaleString("en-GB",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit",timeZone:"UTC"});
+}
+function statusInfo(s){
+  if(s.cancelled) return {cls:"canc",main:"Cancelled",sub:""};
+  const late=s.arrivalLatenessMin ?? s.departureLatenessMin;
+  if(s.actualDepartureTime==null && late==null) return {cls:"sched",main:"Scheduled",sub:"no realtime"};
+  if(late==null) return {cls:"ontime",main:"On time",sub:""};
+  if(late<=0) return {cls:"ontime",main:"On time",sub:late<0?`${-late}m early`:""};
+  return {cls:"late",main:`+${late} min`,sub:`exp ${s.actualArrivalTime??s.arrivalTime}`};
+}
+function svcRoute(s){return s.origin.replace(" International","")+" → "+s.destination.replace(" International","");}
+function chips(s){
+  const c=[];
+  if(s.platform) c.push("Plat "+s.platform);
+  if(s.numberOfVehicles) c.push(s.numberOfVehicles+" coach");
+  if(s.unitNumber) c.push("Unit "+s.unitNumber);
+  return c.map(x=>`<span class="chip">${x}</span>`).join("");
+}
+
+function activeRows(){
+  let r=EMR[state.date][state.dir];
+  if(state.stock!=="all") r=r.filter(s=>s.stockClass===state.stock);
+  return r;
+}
+
+function render(){
+  document.getElementById("updated").textContent=fmtUpdated(EMR.generatedAt);
+  const d=new Date(EMR[state.date].date+"T00:00:00Z");
+  const dayStr=(state.date==="today"?"Today":"Tomorrow")+" · "+d.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",timeZone:"UTC"});
+  const dirStr=state.dir==="toLondon"?"Sheffield → London":"London → Sheffield";
+  document.getElementById("banner").innerHTML=`<span class="day">${dayStr}</span><span class="dirpill">${dirStr}</span>`;
+
+  const all=EMR[state.date][state.dir];
+  const a=all.filter(s=>s.stockClass==="810").length;
+  const m=all.filter(s=>s.stockClass==="222").length;
+  const u=all.filter(s=>s.stockClass==="unknown").length;
+  const canc=all.filter(s=>s.cancelled).length;
+  document.getElementById("counts").innerHTML=
+    `<span class="cpill a"><i></i>${a} Aurora</span>
+     <span class="cpill m"><i></i>${m} Meridian</span>
+     ${u?`<span class="cpill u"><i></i>${u} Unknown</span>`:""}
+     <span class="cpill c"><i></i>${canc} Cancelled</span>`;
+
+  const rows=activeRows();
+  const line=document.getElementById("line");
+  if(!rows.length){line.innerHTML=`<div class="empty">No services match this filter.</div>`;return;}
+
+  const fromName=state.dir==="toLondon"?"Sheffield":"London St Pancras";
+  const toName=state.dir==="toLondon"?"London St Pancras":"Sheffield";
+
+  let html=`<div class="terminus"><span class="cap"></span><span class="ico">◉</span><span>From ${fromName} — ${rows.length} departures</span></div>`;
+  rows.forEach((s,i)=>{
+    const c=cls(s.stockClass);const st=statusInfo(s);
+    // segment colour = this service's stock (line visibly alternates)
+    const seg=stockColor(s.stockClass);
+    html+=`<div class="node ${c} ${s.cancelled?"canc":""}" style="--seg:${seg}">
+      <span class="dot"></span>
+      <div class="stop ${c} ${s.cancelled?"cancrow":""}">
+        <div class="times tnum"><div class="dep">${s.departureTime}</div><div class="arr">arr ${s.arrivalTime}</div></div>
+        <div class="body">
+          <div class="route"><b>${svcRoute(s)}</b></div>
+          <div class="meta">
+            <span class="tag ${c}"><span class="d"></span>${lab(s.stockClass)}</span>
+            <span class="conf">${s.confidence}</span>
+            ${chips(s)}
+          </div>
+        </div>
+        <div class="status ${st.cls} tnum">${st.main}${st.sub?`<small>${st.sub}</small>`:""}</div>
+      </div>
+    </div>`;
+  });
+  html+=`<div class="terminus end"><span class="cap"></span><span class="ico">◉</span><span>Arriving ${toName}</span></div>`;
+  line.innerHTML=html;
+}
+
+document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{
+  state[b.dataset.k]=b.dataset.v;
+  b.parentNode.querySelectorAll("button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on");render();
+}));
+render();
+</script>
+</body>
+</html>

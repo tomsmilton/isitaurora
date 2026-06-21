@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Is it Aurora?</title>
+<style>
+  :root{
+    --text:#0d1622; --text2:#475063; --text3:#7c869a;
+    --card:rgba(255,255,255,.55); --card-brd:rgba(255,255,255,.7);
+    --shadow:0 20px 50px -24px rgba(20,30,60,.4);
+    --aurora:#0a72d6; --aurora-deep:#064a92;
+    --aurora-tint:rgba(120,190,255,.30); --aurora-brd:rgba(90,165,255,.55);
+    --meridian:#b06a00; --meridian-deep:#8a5200;
+    --meridian-tint:rgba(255,200,110,.28); --meridian-brd:rgba(230,175,80,.5);
+    --good:#0a8f4d; --late:#c06800; --red:#d52d22;
+    --seg-bg:rgba(255,255,255,.45); --seg-on:#ffffff;
+    --chip:rgba(255,255,255,.6); --chip-brd:rgba(255,255,255,.8);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font:16px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,Helvetica,Arial,sans-serif;
+    color:var(--text); -webkit-font-smoothing:antialiased; padding:0 0 70px;
+    min-height:100vh; position:relative; overflow-x:hidden;
+    background:#eaf1fb;
+  }
+  /* gradient mesh background */
+  body::before{
+    content:""; position:fixed; inset:-20% -20% -20% -20%; z-index:-1;
+    background:
+      radial-gradient(40% 40% at 18% 12%, #bcd9ff 0%, #bcd9ff00 70%),
+      radial-gradient(45% 45% at 85% 8%, #d9c7ff 0%, #d9c7ff00 70%),
+      radial-gradient(50% 50% at 75% 85%, #ffd9c2 0%, #ffd9c200 72%),
+      radial-gradient(45% 45% at 12% 88%, #c2ffe6 0%, #c2ffe600 72%),
+      linear-gradient(160deg,#eaf2ff,#f3ecff);
+  }
+  .wrap{max-width:1120px; margin:0 auto; padding:26px 18px 0}
+
+  /* ---- hero ---- */
+  .hero{
+    background:var(--card); border:1px solid var(--card-brd); border-radius:26px;
+    backdrop-filter:blur(24px) saturate(1.5); -webkit-backdrop-filter:blur(24px) saturate(1.5);
+    box-shadow:var(--shadow); padding:22px 24px; margin-bottom:18px;
+  }
+  .hero-top{display:flex; align-items:flex-start; gap:16px; flex-wrap:wrap}
+  .hero h1{
+    margin:0; font-size:32px; font-weight:800; letter-spacing:-.02em; line-height:1.05;
+  }
+  .hero h1 .q{color:var(--aurora)}
+  .hero .sub{margin-top:6px; font-size:14.5px; color:var(--text2); font-weight:600; letter-spacing:.01em}
+  .updated{
+    margin-left:auto; display:flex; align-items:center; gap:9px;
+    background:rgba(255,255,255,.5); border:1px solid var(--chip-brd); border-radius:14px;
+    padding:9px 14px; font-size:12.5px; color:var(--text2); white-space:nowrap;
+  }
+  .updated .live{width:8px;height:8px;border-radius:50%;background:var(--good);
+    box-shadow:0 0 0 4px rgba(10,143,77,.18)}
+  .updated b{color:var(--text); font-size:13px; font-weight:700}
+
+  /* ---- segmented controls ---- */
+  .segs{display:flex; gap:12px; flex-wrap:wrap; margin-top:18px}
+  .seg{
+    display:inline-flex; background:var(--seg-bg); border:1px solid var(--chip-brd);
+    border-radius:14px; padding:4px; gap:2px;
+    backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  }
+  .seg button{
+    appearance:none; border:0; background:#0000; cursor:pointer;
+    font:inherit; font-size:13.5px; font-weight:700; color:var(--text2);
+    padding:8px 16px; border-radius:11px; letter-spacing:.01em; transition:none;
+  }
+  .seg button.on{background:var(--seg-on); color:var(--text);
+    box-shadow:0 4px 12px -4px rgba(20,30,60,.28)}
+  .seg.aur button.on{color:var(--aurora)}
+
+  .summary{
+    margin:16px 4px 14px; font-size:14px; color:var(--text2); font-weight:600;
+    display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+  }
+  .summary b{color:var(--text); font-weight:800}
+  .summary .pill{
+    font-size:12px; font-weight:800; color:var(--aurora-deep);
+    background:var(--aurora-tint); border:1px solid var(--aurora-brd);
+    padding:3px 10px; border-radius:999px;
+  }
+
+  /* ---- cards grid ---- */
+  .grid{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px}
+
+  .card{
+    position:relative; border-radius:22px; padding:18px 20px;
+    border:1px solid var(--card-brd); background:var(--card);
+    backdrop-filter:blur(20px) saturate(1.6); -webkit-backdrop-filter:blur(20px) saturate(1.6);
+    box-shadow:var(--shadow); overflow:hidden;
+  }
+  .card.aurora{
+    background:linear-gradient(150deg,var(--aurora-tint),rgba(255,255,255,.42));
+    border-color:var(--aurora-brd);
+  }
+  .card.meridian{
+    background:linear-gradient(150deg,var(--meridian-tint),rgba(255,255,255,.42));
+    border-color:var(--meridian-brd);
+  }
+  .card-top{display:flex; align-items:flex-start; justify-content:space-between; gap:12px}
+  .times{display:flex; align-items:baseline; gap:10px}
+  .dep{font-size:34px; font-weight:800; letter-spacing:-.02em; line-height:1; font-variant-numeric:tabular-nums}
+  .arrowto{font-size:14px; color:var(--text2); font-weight:700}
+  .arr{font-size:19px; color:var(--text2); font-weight:700; font-variant-numeric:tabular-nums}
+
+  .ident{display:flex; flex-direction:column; gap:6px; align-items:flex-end; flex-shrink:0}
+  .pill-stock{
+    display:inline-flex; align-items:center; gap:6px; font-size:14px; font-weight:800;
+    padding:6px 13px; border-radius:999px; white-space:nowrap; letter-spacing:.01em;
+  }
+  .pill-stock .d{width:7px;height:7px;border-radius:50%}
+  .ps-810{color:#fff; background:linear-gradient(135deg,#2f96f0,#0a5fc0)}
+  .ps-810 .d{background:#dff0ff}
+  .ps-222{color:#fff; background:linear-gradient(135deg,#e09a30,#b06a00)}
+  .ps-222 .d{background:#ffe9c4}
+  .ps-unknown{color:var(--text2); background:rgba(255,255,255,.6); border:1px solid var(--chip-brd)}
+  .ps-unknown .d{background:var(--text3)}
+  .lateness{font-size:12.5px; font-weight:800; padding:4px 11px; border-radius:999px; white-space:nowrap}
+  .lt-good{color:var(--good); background:rgba(10,143,77,.12)}
+  .lt-late{color:var(--late); background:rgba(192,104,0,.14)}
+  .lt-pred{color:var(--text2); background:rgba(120,134,154,.16)}
+  .lt-canc{color:#fff; background:var(--red)}
+
+  .route{margin-top:11px; font-size:15px; font-weight:700; color:var(--text)}
+  .route .mid{color:var(--text3); margin:0 5px; font-weight:600}
+  .subline{font-size:12px; color:var(--text3); margin-top:3px; font-weight:600; letter-spacing:.04em; text-transform:uppercase}
+
+  .chips{display:flex; flex-wrap:wrap; gap:7px; margin-top:14px}
+  .chip{
+    font-size:12px; font-weight:700; color:var(--text); background:var(--chip);
+    border:1px solid var(--chip-brd); border-radius:10px; padding:5px 11px;
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  }
+  .chip b{color:var(--text3); font-weight:700; font-size:10px; letter-spacing:.08em;
+    text-transform:uppercase; margin-right:5px}
+
+  .card.canc .dep,.card.canc .route{opacity:.55; text-decoration:line-through}
+
+  .empty{
+    grid-column:1/-1; text-align:center; padding:40px; color:var(--text2);
+    background:var(--card); border:1px solid var(--card-brd); border-radius:22px;
+    backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); font-weight:600;
+  }
+  footer{max-width:1120px; margin:24px auto 0; padding:0 18px; text-align:center;
+    font-size:12px; color:var(--text3); font-weight:600}
+
+  @media(max-width:760px){
+    .grid{grid-template-columns:1fr}
+    .hero h1{font-size:27px}
+    .updated{margin-left:0; flex:1 1 100%; justify-content:center; margin-top:4px}
+    .wrap{padding:18px 13px 0}
+    .dep{font-size:31px}
+  }
+
+  @media(prefers-color-scheme:dark){
+    :root{
+      --text:#f1f5fb; --text2:#aeb8cb; --text3:#7c879c;
+      --card:rgba(30,38,54,.5); --card-brd:rgba(255,255,255,.12);
+      --shadow:0 24px 56px -28px #000;
+      --aurora:#7cc1ff; --aurora-deep:#a9d6ff;
+      --aurora-tint:rgba(40,110,200,.30); --aurora-brd:rgba(110,180,255,.4);
+      --meridian:#f0bb5e; --meridian-deep:#ffd596;
+      --meridian-tint:rgba(150,100,20,.32); --meridian-brd:rgba(220,170,80,.4);
+      --good:#46d186; --late:#ffb04d; --red:#ff5246;
+      --seg-bg:rgba(255,255,255,.08); --seg-on:rgba(255,255,255,.16);
+      --chip:rgba(255,255,255,.08); --chip-brd:rgba(255,255,255,.16);
+    }
+    body{background:#0a0e16}
+    body::before{
+      background:
+        radial-gradient(42% 42% at 18% 12%, #16365e 0%, #16365e00 70%),
+        radial-gradient(45% 45% at 85% 8%, #2c2150 0%, #2c215000 70%),
+        radial-gradient(50% 50% at 75% 85%, #3a2418 0%, #3a241800 72%),
+        radial-gradient(45% 45% at 12% 88%, #103a2e 0%, #103a2e00 72%),
+        linear-gradient(160deg,#0c1220,#120e1d);
+    }
+    .updated{background:rgba(255,255,255,.06)}
+    .card.aurora{background:linear-gradient(150deg,var(--aurora-tint),rgba(30,38,54,.42))}
+    .card.meridian{background:linear-gradient(150deg,var(--meridian-tint),rgba(30,38,54,.42))}
+    .seg button.on{box-shadow:0 4px 14px -4px #000}
+    .ps-unknown{color:var(--text2); background:rgba(255,255,255,.1)}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="hero-top">
+      <div>
+        <h1>Is it Aurora<span class="q">?</span></h1>
+        <div class="sub">EMR · Sheffield ⇄ London St Pancras</div>
+      </div>
+      <div class="updated">
+        <span class="live"></span>
+        <span>Data from <b id="stamp"></b></span>
+      </div>
+    </div>
+    <div class="segs">
+      <div class="seg" id="dateSeg">
+        <button data-k="date" data-v="today" class="on">Today</button>
+        <button data-k="date" data-v="tomorrow">Tomorrow</button>
+      </div>
+      <div class="seg aur" id="dirSeg">
+        <button data-k="dir" data-v="toLondon" class="on">→ London</button>
+        <button data-k="dir" data-v="toSheffield">→ Sheffield</button>
+      </div>
+      <div class="seg" id="stkSeg">
+        <button data-k="stock" data-v="all" class="on">All</button>
+        <button data-k="stock" data-v="810">Aurora</button>
+        <button data-k="stock" data-v="222">Meridian</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="summary" id="summary"></div>
+  <div class="grid" id="grid"></div>
+</div>
+<footer>Frosted-glass mockup · sample data 19 Jun 2026 · Aurora = Class 810 electric · Meridian = Class 222 diesel</footer>
+
+<script src="data.js"></script>
+<script>
+const state={date:"today",dir:"toLondon",stock:"all"};
+const stockLabel=c=>c==="810"?"Aurora":c==="222"?"Meridian":"Unknown";
+function fmtStamp(iso){
+  const d=new Date(iso);
+  return d.toLocaleString("en-GB",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit",timeZone:"UTC"});
+}
+function latenessPill(s){
+  if(s.cancelled) return `<span class="lateness lt-canc">Cancelled</span>`;
+  const late=s.arrivalLatenessMin ?? s.departureLatenessMin;
+  if(s.actualDepartureTime==null && late==null)
+    return `<span class="lateness lt-pred">Scheduled</span>`;
+  if(late==null||late<=0) return `<span class="lateness lt-good">On time${late<0?` · ${Math.abs(late)}m early`:''}</span>`;
+  return `<span class="lateness lt-late">+${late} min</span>`;
+}
+function card(s){
+  const cls=s.stockClass;
+  const flavour=cls==="810"?"aurora":cls==="222"?"meridian":"unknown";
+  const chips=[];
+  if(s.platform) chips.push(`<span class="chip"><b>Plat</b>${s.platform}</span>`);
+  if(s.numberOfVehicles) chips.push(`<span class="chip"><b>Coaches</b>${s.numberOfVehicles}</span>`);
+  if(s.unitNumber) chips.push(`<span class="chip"><b>Unit</b>${s.unitNumber}</span>`);
+  chips.push(`<span class="chip"><b>Conf</b>${s.confidence}</span>`);
+  const from=s.origin.replace(" International",""), to=s.destination.replace(" International","");
+  const sub=cls==="810"?"Class 810 · Electric":cls==="222"?"Class 222 · Diesel":"Stock unconfirmed";
+  const exp=(!s.cancelled && s.actualArrivalTime && s.arrivalLatenessMin>0)?`<span class="chip"><b>Exp arr</b>${s.actualArrivalTime}</span>`:'';
+  if(exp) chips.unshift(exp);
+  return `<article class="card ${flavour} ${s.cancelled?'canc':''}">
+    <div class="card-top">
+      <div class="times">
+        <span class="dep">${s.departureTime}</span>
+        <span class="arrowto">→</span>
+        <span class="arr">${s.arrivalTime}</span>
+      </div>
+      <div class="ident">
+        <span class="pill-stock ps-${cls}"><span class="d"></span>${stockLabel(cls)}</span>
+        ${latenessPill(s)}
+      </div>
+    </div>
+    <div class="route">${from} <span class="mid">→</span> ${to}</div>
+    <div class="subline">${sub}</div>
+    <div class="chips">${chips.join("")}</div>
+  </article>`;
+}
+function render(){
+  document.getElementById("stamp").textContent=fmtStamp(EMR.generatedAt);
+  let rows=EMR[state.date][state.dir];
+  if(state.stock!=="all") rows=rows.filter(s=>s.stockClass===state.stock);
+  const dir=state.dir==="toLondon"?"to London":"to Sheffield";
+  const day=state.date==="today"?"today":"tomorrow";
+  const aur=rows.filter(s=>s.stockClass==="810").length;
+  document.getElementById("summary").innerHTML=
+    `<b>${rows.length}</b> services ${dir} · <b>${day}</b> <span class="pill">${aur} Aurora</span>`;
+  const grid=document.getElementById("grid");
+  if(!rows.length){grid.innerHTML=`<div class="empty">No services match — likely engineering works.</div>`;return;}
+  grid.innerHTML=rows.map(card).join("");
+}
+document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{
+  const k=b.dataset.k;state[k]=b.dataset.v;
+  b.parentNode.querySelectorAll("button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on");render();
+}));
+render();
+</script>
+</body>
+</html>

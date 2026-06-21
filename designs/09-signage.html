@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Is it Aurora? — Station signage</title>
+<style>
+  :root{
+    --navy:#0a1d4d;        /* national rail navy */
+    --navy-d:#061436;
+    --navy-panel:#0e2563;
+    --ink:#ffffff;
+    --page:#dfe3ea;
+    --grey:#aeb8cc;
+    --aurora:#13c46a;      /* accent for Aurora */
+    --aurora-d:#0a8c4b;
+    --meridian:#f2b134;
+    --red:#ff5a4d;
+    --line:#22356f;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--page);color:#0a1d4d}
+  body{
+    font:16px/1.4 "Helvetica Neue",Helvetica,Arial,"Segoe UI",Roboto,system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;padding:0 0 50px;letter-spacing:.005em;
+  }
+  .wrap{max-width:1120px;margin:0 auto;padding:0 16px}
+
+  /* TOTEM HEADER */
+  .totem{
+    background:var(--navy);color:var(--ink);border-radius:16px;margin-top:18px;
+    padding:22px 26px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;
+    box-shadow:0 26px 60px -34px #00000099;border:1px solid var(--line);
+  }
+  .nr-arrows{flex:none}
+  .totem-title{display:flex;flex-direction:column}
+  .totem-title .q{font-size:clamp(26px,4.4vw,40px);font-weight:800;letter-spacing:-.01em;line-height:1}
+  .totem-title .sub{font-size:14px;color:#c3ccdf;font-weight:600;margin-top:7px;letter-spacing:.02em}
+  .totem .stamp{
+    margin-left:auto;text-align:right;background:var(--navy-d);border:1px solid var(--line);
+    border-radius:10px;padding:11px 14px;font-size:13px;color:#c3ccdf;line-height:1.5;
+  }
+  .totem .stamp b{color:#fff;font-weight:700;display:block;font-size:14px}
+  .totem .stamp .live{color:var(--aurora);font-weight:700}
+
+  /* CONTROL BAR */
+  .bar{display:flex;flex-wrap:wrap;gap:18px;align-items:center;margin:16px 2px 4px}
+  .ctl{display:flex;align-items:center;gap:9px}
+  .ctl > span{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#5b6685}
+  .seg{display:inline-flex;border:2px solid var(--navy);border-radius:10px;overflow:hidden;background:#fff}
+  .seg button{
+    appearance:none;border:0;background:#0000;color:var(--navy);font:inherit;font-weight:800;
+    font-size:13.5px;padding:7px 14px;cursor:pointer;letter-spacing:.01em;
+  }
+  .seg button+button{border-left:2px solid var(--navy)}
+  .seg button.on{background:var(--navy);color:#fff}
+
+  .nowat{margin:14px 2px 12px;font-size:14px;font-weight:700;color:#33405f}
+  .nowat b{color:var(--navy)}
+
+  /* DEPARTURE SIGNS */
+  .signs{display:grid;gap:14px}
+  .sign{
+    display:grid;grid-template-columns:118px 1fr 150px;
+    background:var(--navy);color:#fff;border-radius:14px;overflow:hidden;
+    border:1px solid var(--line);box-shadow:0 14px 30px -22px #000000aa;position:relative;
+  }
+  .sign.aurora{border-left:8px solid var(--aurora)}
+  .sign.meridian{border-left:8px solid var(--meridian)}
+  .sign.unknown{border-left:8px solid var(--grey)}
+  .sign.cancelled{border-left:8px solid var(--red)}
+
+  .s-time{
+    background:var(--navy-d);display:flex;flex-direction:column;justify-content:center;
+    padding:16px 14px 16px 18px;border-right:1px solid var(--line);
+  }
+  .s-time .dep{font-size:32px;font-weight:800;letter-spacing:-.01em;font-variant-numeric:tabular-nums;line-height:1}
+  .s-time .arr{font-size:13px;color:var(--grey);font-weight:600;margin-top:5px;font-variant-numeric:tabular-nums}
+  .sign.cancelled .s-time .dep{text-decoration:line-through;color:#9aa6c2}
+
+  .s-mid{padding:15px 18px;display:flex;flex-direction:column;justify-content:center;min-width:0}
+  .s-dest{font-size:23px;font-weight:800;letter-spacing:-.005em;line-height:1.1}
+  .sign.cancelled .s-dest{color:#aab3cc}
+  .s-formed{
+    display:inline-flex;align-items:center;gap:9px;margin-top:11px;align-self:flex-start;
+    background:#00000033;border:1px solid var(--line);border-radius:9px;padding:6px 11px;
+    font-size:14px;font-weight:700;
+  }
+  .s-formed .lbl{color:var(--grey);font-weight:700;font-size:11px;letter-spacing:.09em;text-transform:uppercase}
+  .s-formed.is-aurora{background:#13c46a26;border-color:#13c46a66}
+  .s-formed.is-aurora .stk{color:#4cf09a}
+  .s-formed.is-meridian{background:#f2b13422;border-color:#f2b13455}
+  .s-formed.is-meridian .stk{color:#ffce6b}
+  .s-formed.is-unknown .stk{color:var(--grey)}
+  .s-chips{margin-top:10px;display:flex;flex-wrap:wrap;gap:7px}
+  .chip{
+    font-size:12px;font-weight:700;color:#cdd6ea;background:#ffffff12;border:1px solid var(--line);
+    border-radius:7px;padding:3px 9px;font-variant-numeric:tabular-nums;letter-spacing:.02em;
+  }
+  .chip.pred{color:#ffd98a;background:#f2b13418;border-color:#f2b13440}
+
+  .s-right{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+    padding:14px 12px;background:#ffffff0a;border-left:1px solid var(--line);text-align:center;
+  }
+  .roundel{
+    width:64px;height:64px;border-radius:50%;background:#fff;color:var(--navy);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;
+    box-shadow:inset 0 0 0 4px var(--navy), 0 0 0 0 #0000;
+  }
+  .roundel .pn{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums}
+  .roundel .pl{font-size:9px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#5b6685;margin-top:1px}
+  .roundel.none{background:#1a2c5e;color:#8b97b6;box-shadow:inset 0 0 0 2px var(--line)}
+  .roundel.none .pn{font-size:18px}
+  .s-status{font-size:13px;font-weight:800;letter-spacing:.01em}
+  .st-ontime{color:#4cf09a}
+  .st-late{color:#ffce6b}
+  .st-canc{color:#ff7a6f;letter-spacing:.06em}
+  .st-pred{color:var(--grey)}
+
+  .legend{margin:20px 2px 0;display:flex;flex-wrap:wrap;gap:18px;font-size:13px;color:#33405f;font-weight:600}
+  .legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:7px;vertical-align:middle}
+  .li-a{background:var(--aurora)}.li-m{background:var(--meridian)}.li-u{background:var(--grey)}.li-c{background:var(--red)}
+  footer{margin-top:22px;text-align:center;color:#5b6685;font-size:12.5px}
+
+  @media(max-width:600px){
+    .sign{grid-template-columns:96px 1fr;grid-template-areas:"time mid" "right right"}
+    .s-time{grid-area:time}.s-mid{grid-area:mid}
+    .s-right{grid-area:right;flex-direction:row;justify-content:space-between;border-left:0;border-top:1px solid var(--line);padding:11px 16px}
+    .s-time .dep{font-size:27px}
+    .s-dest{font-size:20px}
+    .roundel{width:52px;height:52px}.roundel .pn{font-size:20px}
+    .totem .stamp{margin-left:0;width:100%;text-align:left}
+    .bar{gap:13px}
+  }
+  @media(prefers-color-scheme:dark){
+    :root{--page:#05091a;--navy:#0a1c4a;--navy-d:#040d28;--navy-panel:#0c2057}
+    html,body{color:#e7ecf7}
+    .ctl > span{color:#9aa6c6}
+    .seg{background:#0a1c4a;border-color:#2c4188}
+    .seg button{color:#dfe6f7}.seg button+button{border-left-color:#2c4188}
+    .seg button.on{background:#fff;color:#06143a}
+    .nowat{color:#aeb8d6}.nowat b{color:#fff}
+    .legend{color:#aeb8d6}
+    footer{color:#8b97b6}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="totem">
+    <svg class="nr-arrows" width="78" height="52" viewBox="0 0 78 52" aria-label="National Rail double arrow" fill="#fff">
+      <!-- British Rail double arrow motif -->
+      <!-- top arrow: points right -->
+      <polygon points="6,12 62,12 72,18 18,18"/>
+      <polygon points="62,12 78,21 62,30 72,18"/>
+      <!-- bottom arrow: points left -->
+      <polygon points="72,40 16,40 6,34 60,34"/>
+      <polygon points="16,40 0,31 16,22 6,34"/>
+    </svg>
+    <div class="totem-title">
+      <div class="q">Is it Aurora?</div>
+      <div class="sub">East Midlands Railway · Sheffield ⇄ London St Pancras</div>
+    </div>
+    <div class="stamp"><span class="live">●</span> Data from<br><b id="stamp"></b></div>
+  </div>
+
+  <div class="bar">
+    <div class="ctl"><span>Day</span>
+      <div class="seg" id="dateSeg">
+        <button data-k="date" data-v="today" class="on">Today</button>
+        <button data-k="date" data-v="tomorrow">Tomorrow</button>
+      </div>
+    </div>
+    <div class="ctl"><span>Direction</span>
+      <div class="seg" id="dirSeg">
+        <button data-k="dir" data-v="toLondon" class="on">To London</button>
+        <button data-k="dir" data-v="toSheffield">To Sheffield</button>
+      </div>
+    </div>
+    <div class="ctl"><span>Show</span>
+      <div class="seg" id="stkSeg">
+        <button data-k="stock" data-v="all" class="on">All</button>
+        <button data-k="stock" data-v="810">Aurora</button>
+        <button data-k="stock" data-v="222">Meridian</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="nowat" id="nowat"></div>
+  <div class="signs" id="signs"></div>
+
+  <div class="legend">
+    <span><i class="li-a"></i>Class 810 Aurora — electric</span>
+    <span><i class="li-m"></i>Class 222 Meridian — diesel</span>
+    <span><i class="li-u"></i>Stock unknown</span>
+    <span><i class="li-c"></i>Cancelled</span>
+  </div>
+  <footer>Mockup signage · sample data 19 Jun 2026</footer>
+</div>
+
+<script src="data.js"></script>
+<script>
+const state={date:"today",dir:"toLondon",stock:"all"};
+const stockLabel=c=>c==="810"?"Aurora":c==="222"?"Meridian":"Unknown";
+const stockClassName=c=>c==="810"?"aurora":c==="222"?"meridian":"unknown";
+
+function fmtStamp(iso){
+  const d=new Date(iso);
+  return d.toLocaleString("en-GB",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit",timeZone:"UTC"});
+}
+function statusHtml(s){
+  if(s.cancelled) return `<div class="s-status st-canc">CANCELLED</div>`;
+  if(s.confidence==="predicted") return `<div class="s-status st-pred">Predicted</div>`;
+  const late=s.departureLatenessMin;
+  if(s.actualDepartureTime==null && late==null) return `<div class="s-status st-pred">Expected</div>`;
+  if(late==null) return `<div class="s-status st-ontime">On time</div>`;
+  if(late>0) return `<div class="s-status st-late">Exp ${s.actualDepartureTime||''}<br>+${late} min</div>`;
+  return `<div class="s-status st-ontime">On time${late<0?`<br>${-late}m early`:''}</div>`;
+}
+function render(){
+  document.getElementById("stamp").textContent=fmtStamp(EMR.generatedAt);
+  const day=EMR[state.date];
+  const dObj=new Date(day.date+"T00:00:00Z");
+  const dayFriendly=(state.date==="today"?"Today":"Tomorrow")+" · "+dObj.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",timeZone:"UTC"});
+  const dirStr=state.dir==="toLondon"?"Departures to London St Pancras":"Departures to Sheffield";
+  document.getElementById("nowat").innerHTML=`<b>${dayFriendly}</b> — ${dirStr}`;
+
+  let rows=day[state.dir];
+  if(state.stock!=="all") rows=rows.filter(s=>s.stockClass===state.stock);
+
+  const box=document.getElementById("signs");
+  if(!rows.length){box.innerHTML=`<div class="sign" style="grid-template-columns:1fr"><div class="s-mid"><div class="s-dest">No services match</div><div class="chip" style="margin-top:9px;align-self:flex-start">Try a different filter</div></div></div>`;return;}
+
+  box.innerHTML=rows.map(s=>{
+    const cn=stockClassName(s.stockClass);
+    const cls=s.cancelled?"cancelled":cn;
+    const dest=s.destination.replace(" International","");
+    const formedCls=s.stockClass==="810"?"is-aurora":s.stockClass==="222"?"is-meridian":"is-unknown";
+    const stkName=s.stockClass==="810"?"Class 810 Aurora":s.stockClass==="222"?"Class 222 Meridian":"Class — Unknown";
+    const chips=[];
+    if(s.numberOfVehicles) chips.push(`<span class="chip">${s.numberOfVehicles} coaches</span>`);
+    if(s.unitNumber) chips.push(`<span class="chip">Unit ${s.unitNumber}</span>`);
+    if(s.confidence==="predicted") chips.push(`<span class="chip pred">Predicted formation</span>`);
+    else if(s.confidence==="confirmed") chips.push(`<span class="chip">Confirmed</span>`);
+    const plat=s.platform
+      ? `<div class="roundel"><span class="pn">${s.platform}</span><span class="pl">Plat</span></div>`
+      : `<div class="roundel none"><span class="pn">–</span><span class="pl">Plat</span></div>`;
+    return `<div class="sign ${cls}">
+      <div class="s-time"><span class="dep">${s.departureTime}</span><span class="arr">arr ${s.arrivalTime}</span></div>
+      <div class="s-mid">
+        <div class="s-dest">${dest}</div>
+        <div class="s-formed ${formedCls}"><span class="lbl">Formed of</span><span class="stk">${stkName}</span></div>
+        <div class="s-chips">${chips.join("")}</div>
+      </div>
+      <div class="s-right">${plat}${statusHtml(s)}</div>
+    </div>`;
+  }).join("");
+}
+document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{
+  state[b.dataset.k]=b.dataset.v;
+  b.parentNode.querySelectorAll("button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on");render();
+}));
+render();
+</script>
+</body>
+</html>
