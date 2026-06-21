@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Is it Aurora? — The Rail Gazette</title>
+<style>
+  :root{
+    --cream:#f4efe3; --cream2:#faf6ec; --ink:#1c1813; --ink2:#564e40;
+    --ink3:#857a66; --rule:#c9beaa; --rule-dk:#1c1813;
+    --aurora:#0a3d62; --aurora-mark:#0a5a8f; --meridian:#7a5210;
+    --red:#a01f17; --good:#1d6b3c; --late:#9a5a00;
+    --bg:#e9e3d4;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink)}
+  body{
+    font:16px/1.5 Georgia,"Times New Roman",Cambria,"Source Serif Pro",serif;
+    -webkit-font-smoothing:antialiased; padding:26px 18px 70px;
+  }
+  .sans{font-family:"Helvetica Neue",Helvetica,Arial,system-ui,sans-serif}
+  .wrap{max-width:1120px; margin:0 auto;
+    background:var(--cream); border:1px solid var(--rule);
+    box-shadow:0 24px 60px -40px rgba(28,24,19,.6);
+    padding:28px 30px 34px;
+  }
+
+  /* ---- masthead ---- */
+  .masthead{text-align:center; border-bottom:3px double var(--rule-dk); padding-bottom:14px}
+  .eyebrow{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink2);
+    border-bottom:1px solid var(--rule); padding-bottom:8px; margin-bottom:12px;
+  }
+  .eyebrow .l,.eyebrow .r{flex:1}
+  .eyebrow .r{text-align:right}
+  .eyebrow .c{flex:0 0 auto; font-weight:700; letter-spacing:.28em; color:var(--ink)}
+  h1.title{
+    margin:6px 0 4px; font-size:clamp(40px,9vw,76px); line-height:.95;
+    letter-spacing:-.01em; font-weight:700; font-style:italic;
+  }
+  h1.title .q{font-style:normal; color:var(--aurora-mark)}
+  .deck{
+    font-size:15px; color:var(--ink2); font-style:italic; letter-spacing:.01em;
+  }
+  .dateline{
+    margin-top:10px; font-size:12px; letter-spacing:.06em; color:var(--ink2);
+    display:flex; gap:8px; justify-content:center; flex-wrap:wrap; align-items:center;
+  }
+  .dateline b{color:var(--ink)}
+  .dateline .sep{color:var(--ink3)}
+  .dateline .live{color:var(--good); font-weight:700}
+
+  /* ---- controls ---- */
+  .controls{
+    display:flex; gap:18px; flex-wrap:wrap; align-items:center; justify-content:center;
+    padding:14px 0 6px; border-bottom:1px solid var(--rule); margin-bottom:6px;
+  }
+  .ctl{display:flex; align-items:baseline; gap:9px}
+  .ctl .lab{font-size:10.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--ink3); font-weight:700}
+  .seg{display:inline-flex; gap:0}
+  .seg button{
+    appearance:none; border:0; background:#0000; cursor:pointer;
+    font-family:Georgia,serif; font-size:15px; font-style:italic; color:var(--ink2);
+    padding:2px 9px; border-bottom:2px solid transparent;
+  }
+  .seg button+button{border-left:1px solid var(--rule)}
+  .seg button.on{color:var(--ink); font-weight:700; border-bottom-color:var(--aurora-mark)}
+
+  /* ---- section head ---- */
+  .secthead{
+    display:flex; align-items:baseline; justify-content:space-between;
+    border-bottom:2px solid var(--rule-dk); padding:14px 0 6px; margin-top:8px;
+  }
+  .secthead h2{
+    margin:0; font-size:22px; font-weight:700; letter-spacing:.01em; font-style:italic;
+  }
+  .secthead .meta{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink2)}
+  .secthead .meta b{color:var(--ink)}
+
+  .legend{
+    display:flex; gap:18px; flex-wrap:wrap; font-size:11.5px; color:var(--ink2);
+    padding:8px 0 4px; letter-spacing:.03em; border-bottom:1px solid var(--rule); margin-bottom:6px;
+  }
+  .legend i{display:inline-block; width:14px; border-bottom:2px solid; margin-right:6px; vertical-align:middle}
+  .legend .la{color:var(--aurora-mark)} .legend .lm{color:var(--meridian)} .legend .lu{color:var(--ink3)}
+  .legend b{font-style:italic}
+
+  /* ---- columns of entries ---- */
+  .cols{columns:2; column-gap:34px; column-rule:1px solid var(--rule); padding-top:4px}
+
+  .entry{
+    break-inside:avoid; -webkit-column-break-inside:avoid;
+    padding:11px 0 10px; border-bottom:1px solid var(--rule);
+    display:grid; grid-template-columns:auto 1fr auto; gap:4px 12px; align-items:baseline;
+  }
+  .entry .mark{
+    grid-row:1/3; align-self:start; width:18px; text-align:center;
+    font-size:15px; line-height:1.4; color:var(--ink3);
+  }
+  .entry.aurora .mark{color:var(--aurora-mark); font-weight:700}
+  .entry .timewrap{grid-column:2; display:flex; align-items:baseline; gap:9px}
+  .dep{font-size:23px; font-weight:700; letter-spacing:.01em; font-variant-numeric:tabular-nums}
+  .entry.aurora .dep{color:var(--aurora)}
+  .toarr{font-size:13px; color:var(--ink2); font-style:italic}
+  .toarr .a{font-variant-numeric:tabular-nums; font-style:normal}
+  .stock{
+    grid-column:3; grid-row:1; justify-self:end; text-align:right;
+    font-size:16px; font-weight:700; font-style:italic; white-space:nowrap;
+  }
+  .entry.aurora .stock{color:var(--aurora)}
+  .entry.meridian .stock{color:var(--meridian)}
+  .entry.unknown .stock{color:var(--ink3)}
+  .stock small{display:block; font-size:9.5px; letter-spacing:.16em; text-transform:uppercase;
+    font-style:normal; font-weight:700; color:var(--ink3)}
+
+  .route{grid-column:2/4; font-size:13.5px; color:var(--ink); margin-top:1px}
+  .route .mid{color:var(--ink3); margin:0 4px}
+  .det{
+    grid-column:2/4; font-size:11px; color:var(--ink2); margin-top:2px;
+    letter-spacing:.03em; display:flex; flex-wrap:wrap; gap:4px 10px; align-items:baseline;
+  }
+  .det .sc{font-variant:small-caps; letter-spacing:.06em; font-weight:700; color:var(--ink3)}
+  .det .val{font-style:italic}
+  .det .status{font-weight:700; font-style:italic}
+  .st-good{color:var(--good)} .st-late{color:var(--late)} .st-pred{color:var(--ink3)}
+  .st-canc{color:var(--red); font-variant:small-caps; letter-spacing:.08em; font-style:normal; font-weight:700}
+
+  .entry.canc .dep,.entry.canc .route{text-decoration:line-through; color:var(--ink3)}
+  .entry.canc .stock{color:var(--ink3)}
+
+  .empty{padding:34px 0; text-align:center; font-style:italic; color:var(--ink2); column-span:all}
+
+  footer{
+    max-width:1120px; margin:18px auto 0; text-align:center; font-size:11px;
+    color:var(--ink3); letter-spacing:.08em; font-style:italic;
+  }
+
+  @media(max-width:720px){
+    body{padding:16px 10px 60px}
+    .wrap{padding:18px 16px 24px}
+    .cols{columns:1}
+    .eyebrow{font-size:9.5px; letter-spacing:.12em}
+    .controls{gap:12px}
+    .entry{grid-template-columns:auto 1fr; }
+    .entry .stock{grid-column:2; grid-row:auto; justify-self:start; text-align:left; margin-top:2px}
+    .entry .stock small{display:inline; margin-left:6px}
+    .entry .route{grid-column:1/3}
+    .entry .det{grid-column:1/3}
+    .entry .timewrap{grid-column:2}
+  }
+
+  @media(prefers-color-scheme:dark){
+    :root{
+      --bg:#161310; --cream:#211d17; --cream2:#272219; --ink:#f1ebdd; --ink2:#b6ab95;
+      --ink3:#857a66; --rule:#3a3327; --rule-dk:#5a503d;
+      --aurora:#6cb6e8; --aurora-mark:#7cc1ef; --meridian:#d8ac4e;
+      --red:#ec6258; --good:#5bcd84; --late:#e9a64a;
+    }
+    body{background:var(--bg)}
+    .wrap{box-shadow:0 24px 60px -40px #000}
+    h1.title .q{color:var(--aurora-mark)}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="masthead">
+    <div class="eyebrow">
+      <span class="l">No. 810 · Vol. CCXXII</span>
+      <span class="c">THE RAIL GAZETTE</span>
+      <span class="r">East Midlands Edition</span>
+    </div>
+    <h1 class="title">Is it Aurora<span class="q">?</span></h1>
+    <div class="deck">An honest accounting of every Sheffield ⇄ London St&nbsp;Pancras working</div>
+    <div class="dateline">
+      <span id="todayLine"><b></b></span>
+      <span class="sep">·</span>
+      <span class="live">●</span>
+      <span>Data from <b id="stamp"></b></span>
+    </div>
+  </div>
+
+  <div class="controls sans">
+    <div class="ctl"><span class="lab">Day</span>
+      <div class="seg" id="dateSeg">
+        <button data-k="date" data-v="today" class="on">Today</button>
+        <button data-k="date" data-v="tomorrow">Tomorrow</button>
+      </div></div>
+    <div class="ctl"><span class="lab">Direction</span>
+      <div class="seg" id="dirSeg">
+        <button data-k="dir" data-v="toLondon" class="on">To London</button>
+        <button data-k="dir" data-v="toSheffield">To Sheffield</button>
+      </div></div>
+    <div class="ctl"><span class="lab">Stock</span>
+      <div class="seg" id="stkSeg">
+        <button data-k="stock" data-v="all" class="on">All</button>
+        <button data-k="stock" data-v="810">Aurora</button>
+        <button data-k="stock" data-v="222">Meridian</button>
+      </div></div>
+  </div>
+
+  <div class="secthead">
+    <h2 id="secTitle"></h2>
+    <div class="meta" id="secMeta"></div>
+  </div>
+  <div class="legend">
+    <span><i class="la"></i><b>Aurora</b> — Class 810, electric (emphasised ‡)</span>
+    <span><i class="lm"></i><b>Meridian</b> — Class 222, diesel</span>
+    <span><i class="lu"></i>Unconfirmed stock</span>
+  </div>
+
+  <div class="cols" id="cols"></div>
+</div>
+<footer>Set in Georgia · A typographic mockup · Sample data 19 June 2026 · Source: realtime train feed</footer>
+
+<script src="data.js"></script>
+<script>
+const state={date:"today",dir:"toLondon",stock:"all"};
+const stockLabel=c=>c==="810"?"Aurora":c==="222"?"Meridian":"Unknown";
+function fmtStamp(iso){
+  const d=new Date(iso);
+  return d.toLocaleString("en-GB",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit",timeZone:"UTC"});
+}
+function fmtDay(key){
+  const d=new Date(EMR[key].date+"T00:00:00Z");
+  return d.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric",timeZone:"UTC"});
+}
+function statusBit(s){
+  if(s.cancelled) return `<span class="status st-canc">Cancelled</span>`;
+  const late=s.arrivalLatenessMin ?? s.departureLatenessMin;
+  if(s.actualDepartureTime==null && late==null)
+    return `<span class="status st-pred">Predicted</span>`;
+  if(late==null||late<=0) return `<span class="status st-good">On time${late<0?` (${Math.abs(late)}m early)`:''}</span>`;
+  return `<span class="status st-late">${late} min late · exp. ${s.actualArrivalTime??s.arrivalTime}</span>`;
+}
+function entry(s){
+  const cls=s.stockClass;
+  const flavour=cls==="810"?"aurora":cls==="222"?"meridian":"unknown";
+  const mark=cls==="810"?"‡":"";
+  const det=[];
+  det.push(`<span><span class="sc">Conf.</span> <span class="val">${s.confidence}</span></span>`);
+  if(s.platform) det.push(`<span><span class="sc">Plat.</span> <span class="val">${s.platform}</span></span>`);
+  if(s.numberOfVehicles) det.push(`<span><span class="sc">Coaches</span> <span class="val">${s.numberOfVehicles}</span></span>`);
+  if(s.unitNumber) det.push(`<span><span class="sc">Unit</span> <span class="val">${s.unitNumber}</span></span>`);
+  const from=s.origin.replace(" International",""), to=s.destination.replace(" International","");
+  return `<div class="entry ${flavour} ${s.cancelled?'canc':''}">
+    <span class="mark">${mark||'·'}</span>
+    <span class="timewrap">
+      <span class="dep">${s.departureTime}</span>
+      <span class="toarr">arr. <span class="a">${s.arrivalTime}</span></span>
+    </span>
+    <span class="stock">${stockLabel(cls)}<small>${cls==="unknown"?"stock t.b.c.":"class "+cls}</small></span>
+    <span class="route">${from} <span class="mid">to</span> ${to}</span>
+    <span class="det">${det.join("")} ${statusBit(s)}</span>
+  </div>`;
+}
+function render(){
+  document.getElementById("stamp").textContent=fmtStamp(EMR.generatedAt);
+  document.querySelector("#todayLine b").textContent=fmtDay(state.date);
+  let rows=EMR[state.date][state.dir];
+  if(state.stock!=="all") rows=rows.filter(s=>s.stockClass===state.stock);
+  const dir=state.dir==="toLondon"?"Sheffield → London St Pancras":"London St Pancras → Sheffield";
+  const aur=rows.filter(s=>s.stockClass==="810").length;
+  document.getElementById("secTitle").textContent=dir;
+  document.getElementById("secMeta").innerHTML=
+    `${state.date==="today"?"Today":"Tomorrow"} · <b>${rows.length}</b> services · <b>${aur}</b> Aurora`;
+  const cols=document.getElementById("cols");
+  if(!rows.length){cols.innerHTML=`<div class="empty">No services on this working — likely engineering possession.</div>`;return;}
+  cols.innerHTML=rows.map(entry).join("");
+}
+document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{
+  const k=b.dataset.k;state[k]=b.dataset.v;
+  b.parentNode.querySelectorAll("button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on");render();
+}));
+render();
+</script>
+</body>
+</html>

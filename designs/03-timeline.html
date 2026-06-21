@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Is it Aurora? — Day timeline</title>
+<style>
+  :root{
+    --bg:#f4f6fb; --bg2:#ffffff; --ink:#101725; --ink2:#475067; --mut:#7c869c;
+    --line:#e3e8f2; --line2:#eef1f8;
+    --aurora:#1f7aff; --aurora-soft:#e6f0ff; --aurora-ink:#0a4ec2;
+    --meridian:#d68a00; --meridian-soft:#fdf1da; --meridian-ink:#9a5e00;
+    --unknown:#9aa3b6; --unknown-soft:#eef0f5;
+    --red:#e0354b; --green:#15a05a;
+    --shadow:0 18px 50px -28px rgba(20,40,90,.35);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink)}
+  body{
+    font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased; padding:22px 18px 64px;
+    background:radial-gradient(120% 70% at 50% -10%,#eef3ff 0%,var(--bg) 60%);
+  }
+  .wrap{max-width:1120px;margin:0 auto}
+  .tnum{font-variant-numeric:tabular-nums;letter-spacing:.01em}
+
+  /* header */
+  header{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+  .brand h1{margin:0;font-size:25px;font-weight:800;letter-spacing:-.02em}
+  .brand h1 .q{color:var(--aurora)}
+  .brand .sub{margin-top:3px;font-size:12.5px;color:var(--ink2);font-weight:600;letter-spacing:.01em}
+  .updated{margin-left:auto;text-align:right;font-size:12px;color:var(--mut)}
+  .updated b{display:block;color:var(--ink);font-size:13px;font-weight:700;margin-top:2px}
+  .updated .live{color:var(--green);font-weight:700}
+
+  /* controls */
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+  .seg{display:inline-flex;background:var(--bg2);border:1px solid var(--line);border-radius:11px;padding:3px;box-shadow:var(--shadow)}
+  .seg button{appearance:none;border:0;background:transparent;color:var(--ink2);font:inherit;font-size:12.5px;font-weight:650;
+    padding:7px 13px;border-radius:8px;cursor:pointer;white-space:nowrap}
+  .seg button.on{background:var(--ink);color:#fff}
+  .seg.acc button.on{background:var(--aurora)}
+  .seg.acc2 button.on{background:var(--meridian)}
+
+  /* summary */
+  .summary{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px}
+  .pill{display:flex;align-items:center;gap:9px;background:var(--bg2);border:1px solid var(--line);
+    border-radius:13px;padding:11px 15px;box-shadow:var(--shadow)}
+  .pill .big{font-size:20px;font-weight:800;line-height:1}
+  .pill .lab{font-size:11px;color:var(--mut);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+  .pill.aur{border-color:#cfe2ff;background:linear-gradient(180deg,var(--aurora-soft),#fff)}
+  .pill.aur .big{color:var(--aurora-ink)}
+  .pill.mer{border-color:#f3e0bd;background:linear-gradient(180deg,var(--meridian-soft),#fff)}
+  .pill.mer .big{color:var(--meridian-ink)}
+  .splitbar{flex:1;min-width:180px;display:flex;align-items:center;gap:11px;background:var(--bg2);border:1px solid var(--line);border-radius:13px;padding:11px 15px;box-shadow:var(--shadow)}
+  .splitbar .track{flex:1;height:12px;border-radius:7px;overflow:hidden;display:flex;background:var(--unknown-soft)}
+  .splitbar .track i{height:100%}
+  .splitbar .track .a{background:var(--aurora)}
+  .splitbar .track .m{background:var(--meridian)}
+  .splitbar .pct{font-size:12px;font-weight:700;color:var(--ink2);white-space:nowrap}
+  .splitbar .pct b{color:var(--aurora-ink)}
+
+  /* card */
+  .card{background:var(--bg2);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);overflow:hidden}
+  .card .ch{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:15px 20px;border-bottom:1px solid var(--line2)}
+  .card .ch .t{font-size:13px;font-weight:750}
+  .card .ch .legend{display:flex;gap:15px;margin-left:auto;font-size:11.5px;color:var(--ink2);flex-wrap:wrap}
+  .card .ch .legend span{display:inline-flex;align-items:center;gap:6px}
+  .dotc{width:10px;height:10px;border-radius:50%}
+  .dotc.a{background:var(--aurora)}
+  .dotc.m{background:var(--meridian)}
+  .dotc.u{background:var(--unknown)}
+  .dotc.c{background:transparent;border:2px solid var(--red)}
+
+  /* ===== horizontal ribbon (desktop) ===== */
+  .ribbon-wrap{padding:8px 20px 18px}
+  .ribbon{position:relative;height:150px;margin-top:14px}
+  .grid{position:absolute;inset:0;top:14px;bottom:42px}
+  .gline{position:absolute;top:0;bottom:0;width:1px;background:var(--line2)}
+  .glab{position:absolute;bottom:-22px;transform:translateX(-50%);font-size:10.5px;color:var(--mut);font-weight:600}
+  .band{position:absolute;left:0;right:0;top:62px;height:30px;border-radius:8px;
+    background:linear-gradient(180deg,#f7f9ff,#eef2fb);border:1px solid var(--line2)}
+  .mk{position:absolute;top:30px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;cursor:pointer;z-index:2}
+  .mk .stem{width:2px;height:30px;background:currentColor;opacity:.35}
+  .mk .blob{width:15px;height:15px;border-radius:50%;background:currentColor;border:2px solid var(--bg2);
+    box-shadow:0 1px 4px rgba(0,0,0,.18)}
+  .mk .lbl{margin-top:4px;font-size:9.5px;font-weight:700;color:var(--ink2);white-space:nowrap;
+    font-variant-numeric:tabular-nums}
+  .mk.aur{color:var(--aurora)}
+  .mk.mer{color:var(--meridian)}
+  .mk.unk{color:var(--unknown)}
+  .mk.canc .blob{background:var(--bg2);border-color:var(--red);box-shadow:none}
+  .mk.canc::after{content:"";position:absolute;top:33px;left:50%;width:18px;height:2px;background:var(--red);transform:translateX(-50%) rotate(-45deg)}
+  .mk.canc .lbl{color:var(--red);text-decoration:line-through}
+  .mk.hi .blob{transform:scale(1.35)}
+  .mk.alt{top:62px}
+  .mk.alt .stem{height:30px}
+  /* density strip under ribbon */
+  .density{margin-top:30px;display:flex;height:9px;border-radius:6px;overflow:hidden;border:1px solid var(--line2)}
+  .density i{height:100%}
+  .density .da{background:var(--aurora)}
+  .density .dm{background:var(--meridian)}
+  .density .du{background:var(--unknown)}
+
+  /* ===== list ===== */
+  .listhead{display:grid;grid-template-columns:74px 1fr 150px 120px;gap:12px;padding:10px 20px;
+    border-bottom:1px solid var(--line2);font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--mut);font-weight:700}
+  .listhead span:last-child{text-align:right}
+  .svc{display:grid;grid-template-columns:74px 1fr 150px 120px;gap:12px;align-items:center;
+    padding:13px 20px;border-bottom:1px solid var(--line2);transition:background .12s}
+  .svc:last-child{border-bottom:0}
+  .svc:hover,.svc.hi{background:#f5f8ff}
+  .svc .tm{font-size:18px;font-weight:800}
+  .svc .tm small{display:block;font-size:11px;font-weight:600;color:var(--mut);margin-top:1px}
+  .svc .rt{font-weight:650}
+  .svc .rt .chips{margin-top:5px;display:flex;gap:6px;flex-wrap:wrap}
+  .chip{font-size:11px;font-weight:650;color:var(--ink2);background:var(--line2);border-radius:6px;padding:2px 8px}
+  .tag{display:inline-flex;align-items:center;gap:7px;font-weight:750;font-size:13px;padding:6px 11px;border-radius:9px;white-space:nowrap}
+  .tag .d{width:9px;height:9px;border-radius:50%}
+  .tag.aur{background:var(--aurora-soft);color:var(--aurora-ink)}
+  .tag.aur .d{background:var(--aurora)}
+  .tag.mer{background:var(--meridian-soft);color:var(--meridian-ink)}
+  .tag.mer .d{background:var(--meridian)}
+  .tag.unk{background:var(--unknown-soft);color:#5d6678}
+  .tag.unk .d{background:var(--unknown)}
+  .conf{display:block;margin-top:4px;font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--mut);font-weight:700}
+  .st{text-align:right;font-weight:750;font-size:13px}
+  .st small{display:block;font-size:11px;color:var(--mut);font-weight:600;margin-top:2px}
+  .st.ontime{color:var(--green)}
+  .st.late{color:var(--meridian-ink)}
+  .st.canc{color:var(--red)}
+  .svc.cancrow .tm,.svc.cancrow .rt b{text-decoration:line-through;color:var(--mut)}
+
+  /* mobile vertical timeline */
+  .vtl{display:none}
+  footer{max-width:1120px;margin:18px auto 0;text-align:center;font-size:11px;color:var(--mut)}
+
+  @media(max-width:720px){
+    body{padding:16px 12px 50px}
+    .ribbon-wrap{display:none}
+    .listhead{display:none}
+    .summary{gap:8px}
+    .pill{padding:9px 12px;flex:1;min-width:calc(50% - 4px)}
+    .splitbar{min-width:100%}
+    .card .ch .legend{margin-left:0;width:100%}
+    /* hide grid table list; show vertical timeline instead */
+    #list{display:none}
+    .vtl{display:block;padding:8px 14px 18px}
+    .vrow{position:relative;padding:0 0 16px 40px}
+    .vrow::before{content:"";position:absolute;left:14px;top:20px;bottom:-2px;width:3px;background:var(--line)}
+    .vrow:last-child::before{display:none}
+    .vrow.seg-aur::before{background:var(--aurora)}
+    .vrow.seg-mer::before{background:var(--meridian)}
+    .vrow.seg-unk::before{background:var(--unknown)}
+    .vrow .node{position:absolute;left:7px;top:6px;width:17px;height:17px;border-radius:50%;
+      border:3px solid var(--bg2);box-shadow:0 0 0 2px var(--line)}
+    .vrow.n-aur .node{background:var(--aurora);box-shadow:0 0 0 2px var(--aurora),0 0 12px var(--aurora)}
+    .vrow.n-mer .node{background:var(--meridian);box-shadow:0 0 0 2px var(--meridian)}
+    .vrow.n-unk .node{background:var(--unknown);box-shadow:0 0 0 2px var(--unknown)}
+    .vrow.n-canc .node{background:var(--bg2);box-shadow:0 0 0 2px var(--red)}
+    .vcard{background:var(--bg2);border:1px solid var(--line);border-radius:13px;padding:11px 13px;box-shadow:0 6px 18px -14px rgba(20,40,90,.4)}
+    .vcard .top{display:flex;align-items:baseline;gap:8px}
+    .vcard .top .tm{font-size:19px;font-weight:800}
+    .vcard .top .arr{font-size:12px;color:var(--mut);font-weight:650}
+    .vcard .top .st{margin-left:auto}
+    .vcard .rt{margin-top:3px;font-weight:650;font-size:13px}
+    .vcard .row2{margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .vrow.cancrow .vcard .tm,.vrow.cancrow .vcard .rt b{text-decoration:line-through;color:var(--mut)}
+  }
+
+  @media(prefers-color-scheme:dark){
+    :root{
+      --bg:#0b0f17; --bg2:#141a26; --ink:#eef2fb; --ink2:#b3bdd2; --mut:#8590a8;
+      --line:#222b3d; --line2:#1c2434;
+      --aurora:#5aa6ff; --aurora-soft:#16263f; --aurora-ink:#a8ccff;
+      --meridian:#f0a830; --meridian-soft:#2e2410; --meridian-ink:#f4c578;
+      --unknown:#7e899e; --unknown-soft:#1c2434;
+      --red:#ff5c70; --green:#3ad07f;
+      --shadow:0 20px 55px -30px #000;
+    }
+    body{background:radial-gradient(120% 70% at 50% -10%,#121b2c 0%,var(--bg) 60%)}
+    .seg button.on{color:#fff}
+    .seg .on{}
+    .pill.aur,.pill.mer{background:var(--bg2)}
+    .band{background:linear-gradient(180deg,#171f2e,#11192a)}
+    .svc:hover,.svc.hi{background:#171f2e}
+    .vcard{background:var(--bg2)}
+    .density,.splitbar .track{border-color:var(--line)}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <h1>Is it <span class="q">Aurora?</span></h1>
+      <div class="sub">EMR · Sheffield ⇄ London St Pancras · day timeline</div>
+    </div>
+    <div class="updated">
+      <span class="live">● live</span> data from
+      <b id="updated"></b>
+    </div>
+  </header>
+
+  <div class="controls">
+    <div class="seg" id="dateSeg">
+      <button data-k="date" data-v="today" class="on">Today</button>
+      <button data-k="date" data-v="tomorrow">Tomorrow</button>
+    </div>
+    <div class="seg" id="dirSeg">
+      <button data-k="dir" data-v="toLondon" class="on">→ London</button>
+      <button data-k="dir" data-v="toSheffield">→ Sheffield</button>
+    </div>
+    <div class="seg acc" id="stkSeg">
+      <button data-k="stock" data-v="all" class="on">All stock</button>
+      <button data-k="stock" data-v="810">Aurora</button>
+      <button data-k="stock" data-v="222">Meridian</button>
+    </div>
+  </div>
+
+  <div class="summary" id="summary"></div>
+
+  <div class="card">
+    <div class="ch">
+      <div class="t" id="ctitle">Day rhythm</div>
+      <div class="legend">
+        <span><i class="dotc a"></i>Aurora · 810</span>
+        <span><i class="dotc m"></i>Meridian · 222</span>
+        <span><i class="dotc u"></i>Unknown</span>
+        <span><i class="dotc c"></i>Cancelled</span>
+      </div>
+    </div>
+
+    <div class="ribbon-wrap">
+      <div class="ribbon" id="ribbon"></div>
+      <div class="density" id="density"></div>
+    </div>
+
+    <div class="listhead">
+      <span>Depart</span><span>Route</span><span>Stock</span><span>Status</span>
+    </div>
+    <div id="list"></div>
+    <div class="vtl" id="vtl"></div>
+  </div>
+
+  <footer>Sample data · East Midlands Railway · "Is it Aurora?" design experiment</footer>
+</div>
+
+<script src="data.js"></script>
+<script>
+const state={date:"today",dir:"toLondon",stock:"all"};
+const lab=c=>c==="810"?"Aurora":c==="222"?"Meridian":"Unknown";
+const cls=c=>c==="810"?"aur":c==="222"?"mer":"unk";
+const toMin=t=>{const[h,m]=t.split(":").map(Number);return h*60+m;};
+
+function fmtUpdated(iso){
+  const d=new Date(iso);
+  return d.toLocaleString("en-GB",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit",timeZone:"UTC"});
+}
+function statusInfo(s){
+  if(s.cancelled) return {cls:"canc",main:"Cancelled",sub:""};
+  const late=s.arrivalLatenessMin ?? s.departureLatenessMin;
+  if(s.actualDepartureTime==null && late==null) return {cls:"",main:"Scheduled",sub:"no realtime"};
+  if(late==null) return {cls:"ontime",main:"On time",sub:""};
+  if(late<=0) return {cls:"ontime",main:"On time",sub:late<0?`${-late}m early`:""};
+  return {cls:"late",main:`+${late} min`,sub:`exp ${s.actualArrivalTime??s.arrivalTime}`};
+}
+
+function activeList(){
+  let rows=EMR[state.date][state.dir];
+  if(state.stock!=="all") rows=rows.filter(s=>s.stockClass===state.stock);
+  return rows;
+}
+
+function renderSummary(){
+  const all=EMR[state.date][state.dir];
+  const a=all.filter(s=>s.stockClass==="810").length;
+  const m=all.filter(s=>s.stockClass==="222").length;
+  const u=all.filter(s=>s.stockClass==="unknown").length;
+  const canc=all.filter(s=>s.cancelled).length;
+  const known=a+m||1;
+  const aPct=Math.round(a/known*100);
+  document.getElementById("summary").innerHTML=`
+    <div class="pill"><div><div class="big">${all.length}</div><div class="lab">Services</div></div></div>
+    <div class="pill aur"><div><div class="big">${a}</div><div class="lab">Aurora · 810</div></div></div>
+    <div class="pill mer"><div><div class="big">${m}</div><div class="lab">Meridian · 222</div></div></div>
+    <div class="pill"><div><div class="big" style="color:var(--red)">${canc}</div><div class="lab">Cancelled</div></div></div>
+    <div class="splitbar">
+      <div class="track">
+        <i class="a" style="width:${a/all.length*100}%"></i>
+        <i class="m" style="width:${m/all.length*100}%"></i>
+        <i class="u" style="width:${u/all.length*100}%"></i>
+      </div>
+      <div class="pct"><b>${aPct}% Aurora</b> share</div>
+    </div>`;
+}
+
+function renderRibbon(){
+  const rows=activeList();
+  const ribbon=document.getElementById("ribbon");
+  if(!rows.length){ribbon.innerHTML="";document.getElementById("density").innerHTML="";return;}
+  const allRows=EMR[state.date][state.dir];
+  const t0=Math.floor(toMin(allRows[0].departureTime)/60)*60;
+  const t1=Math.ceil(toMin(allRows[allRows.length-1].departureTime)/60)*60;
+  const span=t1-t0;
+  const pos=t=>((toMin(t)-t0)/span)*100;
+
+  let html=`<div class="grid">`;
+  for(let h=t0;h<=t1;h+=60){
+    const x=((h-t0)/span)*100;
+    html+=`<div class="gline" style="left:${x}%"></div><div class="glab" style="left:${x}%">${String(Math.floor(h/60)).padStart(2,"0")}</div>`;
+  }
+  html+=`</div><div class="band"></div>`;
+
+  // anti-overlap: push close markers' labels to a lower row, toggling
+  let lastX=-99,lastAlt=false;
+  rows.forEach((s,i)=>{
+    const x=pos(s.departureTime);
+    const close=(x-lastX)<3.6;
+    const alt=close&&!lastAlt?"alt":"";
+    lastAlt=!!alt; lastX=x;
+    const c=cls(s.stockClass);
+    html+=`<div class="mk ${c==="aur"?"aur":c==="mer"?"mer":"unk"} ${s.cancelled?"canc":""} ${alt}" style="left:${x}%" data-uid="${s.serviceUid}">
+      <span class="blob"></span><span class="stem"></span><span class="lbl">${s.departureTime}</span></div>`;
+  });
+  ribbon.innerHTML=html;
+
+  // density strip (across the active rows by stock)
+  const a=rows.filter(s=>s.stockClass==="810").length;
+  const m=rows.filter(s=>s.stockClass==="222").length;
+  const u=rows.filter(s=>s.stockClass==="unknown").length;
+  const tot=rows.length||1;
+  document.getElementById("density").innerHTML=
+    `<i class="da" style="width:${a/tot*100}%"></i><i class="dm" style="width:${m/tot*100}%"></i><i class="du" style="width:${u/tot*100}%"></i>`;
+
+  ribbon.querySelectorAll(".mk").forEach(mk=>{
+    mk.addEventListener("mouseenter",()=>hi(mk.dataset.uid,true));
+    mk.addEventListener("mouseleave",()=>hi(mk.dataset.uid,false));
+  });
+}
+
+function svcRoute(s){
+  return s.origin.replace(" International","")+" → "+s.destination.replace(" International","");
+}
+function chips(s){
+  const c=[];
+  if(s.platform) c.push("Plat "+s.platform);
+  if(s.numberOfVehicles) c.push(s.numberOfVehicles+" coach");
+  if(s.unitNumber) c.push("Unit "+s.unitNumber);
+  return c.map(x=>`<span class="chip">${x}</span>`).join("");
+}
+
+function renderList(){
+  const rows=activeList();
+  const list=document.getElementById("list");
+  if(!rows.length){list.innerHTML=`<div style="padding:34px;text-align:center;color:var(--mut)">No services match this filter.</div>`;}
+  else list.innerHTML=rows.map(s=>{
+    const st=statusInfo(s);const c=cls(s.stockClass);
+    return `<div class="svc ${s.cancelled?"cancrow":""}" data-uid="${s.serviceUid}">
+      <div class="tm tnum">${s.departureTime}<small>arr ${s.arrivalTime}</small></div>
+      <div class="rt"><b>${svcRoute(s)}</b><div class="chips">${chips(s)}</div></div>
+      <div><span class="tag ${c}"><span class="d"></span>${lab(s.stockClass)}</span><span class="conf">${s.confidence}</span></div>
+      <div class="st ${st.cls} tnum">${st.main}${st.sub?`<small>${st.sub}</small>`:""}</div>
+    </div>`;
+  }).join("");
+
+  // mobile vertical timeline
+  const vtl=document.getElementById("vtl");
+  vtl.innerHTML=rows.map(s=>{
+    const st=statusInfo(s);const c=cls(s.stockClass);
+    const seg=s.cancelled?"seg-"+c:"seg-"+c;
+    const node=s.cancelled?"n-canc":"n-"+c;
+    return `<div class="vrow ${seg} ${node} ${s.cancelled?"cancrow":""}" data-uid="${s.serviceUid}">
+      <span class="node"></span>
+      <div class="vcard">
+        <div class="top"><span class="tm tnum">${s.departureTime}</span><span class="arr tnum">arr ${s.arrivalTime}</span>
+          <span class="st ${st.cls} tnum">${st.main}</span></div>
+        <div class="rt"><b>${svcRoute(s)}</b></div>
+        <div class="row2"><span class="tag ${c}"><span class="d"></span>${lab(s.stockClass)}</span>${chips(s)}</div>
+      </div></div>`;
+  }).join("");
+}
+
+function hi(uid,on){
+  document.querySelectorAll(`[data-uid="${uid}"]`).forEach(el=>el.classList.toggle("hi",on));
+}
+
+function render(){
+  document.getElementById("updated").textContent=fmtUpdated(EMR.generatedAt);
+  const d=new Date(EMR[state.date].date+"T00:00:00Z");
+  const dayStr=(state.date==="today"?"Today":"Tomorrow")+" · "+d.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",timeZone:"UTC"});
+  const dirStr=state.dir==="toLondon"?"Sheffield → London":"London → Sheffield";
+  document.getElementById("ctitle").textContent=`${dayStr} — ${dirStr}`;
+  renderSummary();renderRibbon();renderList();
+}
+
+document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{
+  state[b.dataset.k]=b.dataset.v;
+  b.parentNode.querySelectorAll("button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on");render();
+}));
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Is it Aurora? — Design experiments</title>
+<style>
+  :root{
+    color-scheme:light dark;
+    --bg:#F5F3EC;--surface:#FAF8F1;--surface-alt:#EAE7DB;--fg:#141413;
+    --muted:#6B6A63;--subtle:#9A988F;--border:#E0DCCC;--border-strong:#C5C1AE;
+  }
+  @media(prefers-color-scheme:dark){:root{
+    --bg:#1A1916;--surface:#22201C;--surface-alt:#2C2A24;--fg:#EDEBE3;
+    --muted:#9F9D94;--subtle:#6F6E66;--border:#302E27;--border-strong:#46443C;
+  }}
+  *{box-sizing:border-box}
+  html,body{background:var(--bg)}
+  body{
+    margin:0;padding:0 20px 80px;color:var(--fg);
+    font:14px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+  }
+  .wrap{max-width:1080px;margin:0 auto}
+  header{padding:64px 0 28px;border-bottom:1px solid var(--border)}
+  .eyebrow{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--subtle)}
+  h1{margin:8px 0 6px;font-size:28px;font-weight:600;letter-spacing:-.02em}
+  .lead{color:var(--muted);font-size:15px;max-width:60ch;margin:0}
+  .meta{margin-top:18px;display:flex;flex-wrap:wrap;gap:8px 18px;font-size:12px;color:var(--subtle)}
+  .meta a{color:var(--muted)}
+  .meta .dot{display:inline-flex;align-items:center;gap:6px}
+  .meta .dot::before{content:"";width:6px;height:6px;border-radius:50%;background:#5B8A4A;opacity:.7}
+  .grid{
+    margin-top:34px;display:grid;gap:18px;
+    grid-template-columns:repeat(auto-fill,minmax(290px,1fr));
+  }
+  .card{
+    display:flex;flex-direction:column;text-decoration:none;color:inherit;
+    background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    overflow:hidden;transition:border-color .15s ease,transform .1s ease;
+  }
+  .card:hover{border-color:var(--border-strong);transform:translateY(-2px)}
+  .shot{
+    aspect-ratio:16/10;background:var(--surface-alt);border-bottom:1px solid var(--border);
+    background-size:cover;background-position:top center;
+  }
+  .card .body{padding:14px 16px 16px}
+  .num{font-size:11px;font-weight:600;letter-spacing:.1em;color:var(--subtle)}
+  .card h2{margin:3px 0 5px;font-size:16px;font-weight:600;letter-spacing:-.01em}
+  .card p{margin:0;color:var(--muted);font-size:13px}
+  .tag{display:inline-block;margin-top:10px;font-size:11px;color:var(--subtle);border:1px solid var(--border);border-radius:999px;padding:2px 9px}
+  footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--border);color:var(--subtle);font-size:12px}
+  footer a{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Is it Aurora? — design lab</div>
+    <h1>Ten ways to read the board</h1>
+    <p class="lead">Experimental redesigns of the EMR Sheffield ⇄ London page, each
+    trying a different way to help you grok — at a glance — whether your train is a
+    Class&nbsp;810 <b>Aurora</b> or a Class&nbsp;222 <b>Meridian</b>, when it runs, and
+    whether it's on time. All ten share the same real sample data (19&nbsp;Jun&nbsp;2026).</p>
+    <div class="meta">
+      <span class="dot">Static mockups · sample data</span>
+      <span><a href="../">← Back to the live page</a></span>
+    </div>
+  </header>
+
+  <div class="grid" id="grid"></div>
+
+  <footer>
+    Design experiments for <a href="../">isitaurora</a>. Data shape from Realtime Trains.
+  </footer>
+</div>
+<script>
+const variants=[
+  ["01","01-departure-board.html","Departure board","Solari split-flap station board — amber on dark, every train a row of flaps."],
+  ["02","02-boarding-pass.html","Boarding pass","Each service as a tear-off ticket stub, Aurora in premium foil."],
+  ["03","03-timeline.html","Day timeline","The whole day plotted on a time ribbon so the Aurora rhythm pops."],
+  ["04","04-big-answer.html","The big answer","One giant YES / NO: is the next train an Aurora?"],
+  ["05","05-editorial.html","Editorial","A printed rail gazette — serif headlines, typographic and calm."],
+  ["06","06-dashboard.html","Dashboard","Stat cards: Aurora share, cancellations and punctuality at a glance."],
+  ["07","07-terminal.html","Terminal","A command-line readout with ANSI colour for each stock class."],
+  ["08","08-glass.html","Frosted glass","Translucent iOS-style cards over a soft gradient mesh."],
+  ["09","09-signage.html","Rail signage","National Rail platform-sign language — navy, bold, official."],
+  ["10","10-journey.html","Journey line","A vertical route-map; the spine alternates colour by stock."],
+];
+document.getElementById("grid").innerHTML=variants.map(([n,href,title,desc])=>`
+  <a class="card" href="${href}">
+    <div class="shot" style="background-image:url('thumbs/${n}.png')"></div>
+    <div class="body">
+      <div class="num">${n} / 10</div>
+      <h2>${title}</h2>
+      <p>${desc}</p>
+    </div>
+  </a>`).join("");
+</script>
+</body>
+</html>

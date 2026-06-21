@@ -871,6 +871,7 @@ function renderHtml(today, tomorrow, generatedAt) {
   </main>
   <footer>
     Data from <a href="https://www.realtimetrains.co.uk/" target="_blank" rel="noopener">Realtime Trains</a>.
+    · <a href="designs/">Design experiments ↗</a>
   </footer>
 </div>
 <script>
