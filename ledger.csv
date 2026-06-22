@@ -34181,3 +34181,5 @@ fetched_at,service_date,direction,service_uid,departure_time,arrival_time,origin
 2026-06-21T22:13:36.471Z,2026-06-22,to-sheffield,C04184,21:02,23:00,St Pancras International,Sheffield,2,222,predicted,,,,Pathed as Diesel multiple unit,false,,,,
 2026-06-21T22:13:36.471Z,2026-06-22,to-sheffield,C21760,21:32,23:41,St Pancras International,Sheffield,3,810,predicted,,,,"Starts as Class 810 EMU, changes en route | Pathed as Diesel multiple unit from here",false,,,,
 2026-06-21T22:13:36.471Z,2026-06-22,to-sheffield,C21772,22:32,00:40,St Pancras International,Sheffield,2,810,predicted,,,,"Starts as Class 810 EMU, changes en route | Pathed as Diesel multiple unit from here",false,,,,
+2026-06-22T06:29:00.563Z,2026-06-23,to-london,W70753,04:38,07:09,Sheffield,St Pancras International,8A,222,predicted,,,,Pathed as Diesel multiple unit,false,,,,
+2026-06-22T06:29:00.563Z,2026-06-23,to-sheffield,C21774,05:27,07:42,St Pancras International,Sheffield,4,222,predicted,,,,Pathed as Diesel multiple unit,false,,,,
