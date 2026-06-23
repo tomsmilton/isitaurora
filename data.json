@@ -1,43 +1,13 @@
 {
-  "generatedAt": "2026-06-22T22:46:37.468Z",
+  "generatedAt": "2026-06-23T04:59:31.794Z",
   "today": {
-    "date": "2026-06-22",
+    "date": "2026-06-23",
     "toLondon": [],
     "toSheffield": []
   },
   "tomorrow": {
-    "date": "2026-06-23",
-    "toLondon": [
-      {
-        "serviceUid": "W70753",
-        "departureTime": "04:38",
-        "arrivalTime": "07:09",
-        "actualDepartureTime": null,
-        "actualArrivalTime": null,
-        "origin": "Sheffield",
-        "destination": "St Pancras International",
-        "platform": "8A",
-        "cancelled": false,
-        "stockClass": "222",
-        "confidence": "predicted",
-        "pathedAs": "Pathed as Diesel multiple unit"
-      }
-    ],
-    "toSheffield": [
-      {
-        "serviceUid": "C21774",
-        "departureTime": "05:27",
-        "arrivalTime": "07:42",
-        "actualDepartureTime": null,
-        "actualArrivalTime": null,
-        "origin": "St Pancras International",
-        "destination": "Sheffield",
-        "platform": "4",
-        "cancelled": false,
-        "stockClass": "222",
-        "confidence": "predicted",
-        "pathedAs": "Pathed as Diesel multiple unit"
-      }
-    ]
+    "date": "2026-06-24",
+    "toLondon": [],
+    "toSheffield": []
   }
 }
