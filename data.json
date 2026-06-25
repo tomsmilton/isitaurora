@@ -1,13 +1,40 @@
 {
-  "generatedAt": "2026-06-24T22:16:22.005Z",
+  "generatedAt": "2026-06-25T05:04:19.512Z",
   "today": {
-    "date": "2026-06-24",
+    "date": "2026-06-25",
     "toLondon": [],
     "toSheffield": []
   },
   "tomorrow": {
-    "date": "2026-06-25",
-    "toLondon": [],
+    "date": "2026-06-26",
+    "toLondon": [
+      {
+        "serviceUid": "W70825",
+        "departureTime": "18:00",
+        "arrivalTime": "20:07",
+        "actualDepartureTime": null,
+        "actualArrivalTime": null,
+        "origin": "Sheffield",
+        "destination": "St Pancras International",
+        "platform": "2A",
+        "cancelled": false,
+        "stockClass": "unknown",
+        "confidence": "unknown"
+      },
+      {
+        "serviceUid": "W70832",
+        "departureTime": "19:35",
+        "arrivalTime": "21:38",
+        "actualDepartureTime": null,
+        "actualArrivalTime": null,
+        "origin": "Sheffield",
+        "destination": "St Pancras International",
+        "platform": "7",
+        "cancelled": false,
+        "stockClass": "unknown",
+        "confidence": "unknown"
+      }
+    ],
     "toSheffield": []
   }
 }
