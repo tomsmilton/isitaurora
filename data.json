@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-26T16:15:17.577Z",
+  "generatedAt": "2026-06-26T19:45:30.426Z",
   "today": {
     "date": "2026-06-26",
     "toLondon": [
@@ -12,7 +12,7 @@
         "origin": "Sheffield",
         "destination": "St Pancras International",
         "platform": "2A",
-        "cancelled": false,
+        "cancelled": true,
         "stockClass": "unknown",
         "confidence": "unknown"
       },
@@ -25,7 +25,7 @@
         "origin": "Sheffield",
         "destination": "St Pancras International",
         "platform": "7",
-        "cancelled": false,
+        "cancelled": true,
         "stockClass": "unknown",
         "confidence": "unknown"
       }
