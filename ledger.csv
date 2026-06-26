@@ -34201,3 +34201,5 @@ fetched_at,service_date,direction,service_uid,departure_time,arrival_time,origin
 2026-06-25T22:20:21.394Z,2026-06-26,to-london,W70832,19:35,21:38,Sheffield,St Pancras International,7,unknown,unknown,,,,,false,,,,
 2026-06-26T05:07:25.664Z,2026-06-26,to-london,W70825,18:00,20:07,Sheffield,St Pancras International,2A,unknown,unknown,,,,,false,,,,
 2026-06-26T05:07:25.664Z,2026-06-26,to-london,W70832,19:35,21:38,Sheffield,St Pancras International,7,unknown,unknown,,,,,false,,,,
+2026-06-26T10:22:27.714Z,2026-06-26,to-london,W70825,18:00,20:07,Sheffield,St Pancras International,2A,unknown,unknown,,,,,false,,,,
+2026-06-26T10:22:27.714Z,2026-06-26,to-london,W70832,19:35,21:38,Sheffield,St Pancras International,7,unknown,unknown,,,,,false,,,,
