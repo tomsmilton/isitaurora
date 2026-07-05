@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-05T19:44:17.162Z",
+  "generatedAt": "2026-07-05T20:05:51.134Z",
   "today": {
     "date": "2026-07-05",
     "toLondon": [
@@ -455,8 +455,9 @@
         "departureTime": "18:32",
         "arrivalTime": "20:47",
         "actualDepartureTime": "18:32",
-        "actualArrivalTime": null,
+        "actualArrivalTime": "20:48",
         "departureLatenessMin": 0,
+        "arrivalLatenessMin": 1,
         "origin": "St Pancras International",
         "destination": "Sheffield",
         "platform": "2",
@@ -522,8 +523,9 @@
         "serviceUid": "W71000",
         "departureTime": "21:02",
         "arrivalTime": "23:14",
-        "actualDepartureTime": null,
+        "actualDepartureTime": "21:02",
         "actualArrivalTime": null,
+        "departureLatenessMin": 0,
         "origin": "St Pancras International",
         "destination": "Sheffield",
         "platform": "2",

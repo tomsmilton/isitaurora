@@ -278,6 +278,16 @@
   }
 
   .empty { color: var(--muted); font-size: 13px; margin: 0; }
+  .notice {
+    margin: 4px 0 0;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--warn) 8%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--warn) 26%, var(--border));
+    color: var(--fg);
+    font-size: 13px; line-height: 1.5;
+  }
+  .notice strong { color: var(--warn); font-weight: 600; }
   .error {
     background: color-mix(in srgb, var(--warn) 8%, var(--surface));
     border: 1px solid color-mix(in srgb, var(--warn) 28%, var(--border));
@@ -308,11 +318,17 @@
 </head>
 <body data-date="today" data-direction="to-london" data-stock="all">
 <div class="wrap">
-  <div class="updated" title="Page generated 2026-07-05T19:44:17.162Z">Updated Sun 5 Jul, 19:44 UTC</div>
+  <div class="updated" title="Page generated 2026-07-05T20:05:51.134Z">Updated Sun 5 Jul, 20:05 UTC</div>
   <header>
     <h1>EMR · Sheffield ⇄ London</h1>
     <div class="sub">Today and tomorrow, with Class 810 (Aurora) vs Class 222 (Meridian) identification.</div>
   </header>
+  <div class="notice" role="status">
+        <strong>Stock identification is temporarily unavailable.</strong>
+        Services, times and platforms below are correct, but we can't currently
+        tell Aurora (810) from Meridian (222). This usually resolves once each
+        train's formation is confirmed.
+      </div>
   <nav class="controls" aria-label="Display controls">
     <div class="seg" role="tablist" aria-label="Date">
       <button data-control="date" data-value="today">Today</button>
@@ -963,8 +979,8 @@
     <div class="actual-times">
       <span class="actual-dep">18:32</span>
       <span class="arrow">→</span>
-      <span class="actual-arr">—</span>
-      <span class="lateness on-time">on time</span>
+      <span class="actual-arr">20:48</span>
+      <span class="lateness late">+1</span>
     </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
@@ -1050,7 +1066,12 @@
       <span class="arr">23:14</span>
       
     </div>
-    
+    <div class="actual-times">
+      <span class="actual-dep">21:02</span>
+      <span class="arrow">→</span>
+      <span class="actual-arr">—</span>
+      <span class="lateness on-time">on time</span>
+    </div>
     <div class="route">St Pancras International → Sheffield</div>
     <div class="meta">
       <span class="stock">Unknown</span>
