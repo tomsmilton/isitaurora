@@ -9,7 +9,7 @@ const RTT_WEB = "https://www.realtimetrains.co.uk";
 const EMR_OPERATOR = "EM";
 const SHEFFIELD = "SHF";
 const ST_PANCRAS = "STP";
-const MAX_CONCURRENT_SCRAPES = 6;
+const MAX_CONCURRENT_LOOKUPS = 6;
 
 // Network resilience: how many times to retry a transient failure, the base
 // backoff (doubled each attempt, plus jitter), and a per-request timeout so a
@@ -241,80 +241,113 @@ function serviceUidOf(entry) {
   return entry?.scheduleMetadata?.identity ?? entry?.scheduleMetadata?.uniqueIdentity ?? null;
 }
 
-function parseStockFromHtml(html) {
-  // Confirmed formation with unit number: "Aurora 5-coach train (unit 810010)"
-  let m = html.match(
-    /(Aurora|Meridian)\s+(\d+)-coach\s+train\s*\(unit\s+(\d+)\)/i
-  );
-  if (m) {
-    const brand = m[1];
-    const is810 = brand.toLowerCase() === "aurora" || m[3].startsWith("810");
-    return {
-      stockClass: is810 ? "810" : "222",
-      confidence: "confirmed",
-      stockBranding: brand,
-      numberOfVehicles: Number.parseInt(m[2]),
-      unitNumber: m[3],
-    };
-  }
+const UNKNOWN_STOCK = { stockClass: "unknown", confidence: "unknown" };
 
-  // Confirmed formation without unit: "Meridian (5 coaches)"
-  m = html.match(/(Aurora|Meridian)\s*\((\d+)\s*coaches?\)/i);
-  if (m) {
-    const brand = m[1];
-    return {
-      stockClass: brand.toLowerCase() === "aurora" ? "810" : "222",
-      confidence: "confirmed",
-      stockBranding: brand,
-      numberOfVehicles: Number.parseInt(m[2]),
-    };
-  }
-
-  // Predicted via CIF "Pathed as" / "Starts as" power type. Bi-mode 810s appear
-  // under "Pathed as Class 810 EMU from here" northbound (off the wires onto them)
-  // and "Starts as Class 810 EMU, changes en route" southbound (under wires out of
-  // STP, then onto diesel). Missing the southbound phrasing misclassifies them as 222.
-  const formationMatches = [
-    ...html.matchAll(/(?:Pathed as|Starts as)\s+([^<"]+)/gi),
-  ];
-  const stockHints = formationMatches.map((p) => p[1].trim());
-  const pathedAs =
-    formationMatches.map((p) => p[0].trim()).join(" | ") || undefined;
-
-  for (const p of stockHints) {
-    if (/class\s*810/i.test(p) || /electro.?diesel/i.test(p)) {
-      return { stockClass: "810", confidence: "predicted", pathedAs };
-    }
-  }
-  for (const p of stockHints) {
-    if (/diesel\s+multiple\s+unit/i.test(p)) {
-      return { stockClass: "222", confidence: "predicted", pathedAs };
-    }
-  }
-  return { stockClass: "unknown", confidence: "unknown", pathedAs };
+// EMR only runs two fleets on this route, so any "810…" TOPS number / leading
+// class is an Aurora and any "222…" is a Meridian.
+function classFromDesignation(value) {
+  if (value === null || value === undefined) return null;
+  const s = String(value).trim();
+  if (s.startsWith("810")) return "810";
+  if (s.startsWith("222")) return "222";
+  return null;
 }
 
-async function scrapeStock(serviceIdentity, date) {
-  const url = `${RTT_WEB}/service/gb-nr:${serviceIdentity}/${date}/detailed`;
+// Derive stock from the /gb-nr/service allocation data. `leadingClass` and the
+// allocationItems' TOPS `identity` give the fleet; `knowYourTrainData` (the live
+// "Know Your Train" formation) is what makes it a *confirmed* rather than merely
+// planned allocation. Anything we can't read falls through to unknown, so the
+// page degrades to "can't tell" instead of guessing.
+function parseStockFromService(service) {
+  if (!service || typeof service !== "object") return { ...UNKNOWN_STOCK };
+
+  // The spec attaches allocations to the service (allocationData) and, via
+  // allocationIndex, potentially per location — gather from every place they
+  // might appear so we don't depend on one exact shape.
+  const allocations = [];
+  const collect = (val) => {
+    if (Array.isArray(val)) val.forEach((a) => a && allocations.push(a));
+    else if (val && typeof val === "object") allocations.push(val);
+  };
+  collect(service.allocationData);
+  collect(service.allocations);
+  collect(service.scheduleMetadata?.allocations);
+  for (const loc of service.locations ?? []) {
+    collect(loc?.allocationData);
+    collect(loc?.allocation);
+    collect(loc?.allocations);
+  }
+  if (allocations.length === 0) return { ...UNKNOWN_STOCK };
+
+  let stockClass = null;
+  let stockBranding;
+  let unitNumber;
+  let numberOfVehicles;
+  let confirmed = false;
+
+  for (const a of allocations) {
+    stockClass ??= classFromDesignation(a.leadingClass);
+    for (const item of a.allocationItems ?? []) {
+      const cls = classFromDesignation(item?.identity);
+      if (cls) {
+        stockClass ??= cls;
+        unitNumber ??= item.identity;
+      }
+    }
+    if (a.passengerVehicles) numberOfVehicles ??= a.passengerVehicles;
+    const kyt = a.knowYourTrainData;
+    if (kyt && typeof kyt === "object") {
+      confirmed = true;
+      if (kyt.stockBranding) stockBranding ??= kyt.stockBranding;
+    }
+  }
+
+  // Last resort: brand name if neither class nor unit number came through.
+  if (!stockClass && stockBranding) {
+    const b = stockBranding.toLowerCase();
+    if (b.includes("aurora")) stockClass = "810";
+    else if (b.includes("meridian")) stockClass = "222";
+  }
+  if (!stockClass) return { ...UNKNOWN_STOCK };
+
+  return {
+    stockClass,
+    // A live Know-Your-Train formation is confirmed; a bare planned allocation
+    // (no KYT yet — typical for tomorrow) is the best prediction we have.
+    confidence: confirmed ? "confirmed" : "predicted",
+    stockBranding,
+    numberOfVehicles,
+    unitNumber,
+  };
+}
+
+async function fetchStock(token, serviceIdentity, date) {
+  // RTT's website (which we used to scrape for formation) is now behind a
+  // Cloudflare bot challenge, so read the same allocation data straight from the
+  // authenticated API instead.
+  const url = new URL("/gb-nr/service", RTT_API);
+  url.searchParams.set("identity", serviceIdentity);
+  url.searchParams.set("departureDate", date);
   try {
     const res = await fetchRetry(
       url,
       {
         headers: {
-          Accept: "text/html",
-          "User-Agent": "EMRDailyReport/1.0 (personal use)",
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
         },
       },
-      `Scrape ${serviceIdentity}`
+      `Service ${serviceIdentity} ${date}`
     );
-    if (!res.ok) return { stockClass: "unknown", confidence: "unknown" };
-    return parseStockFromHtml(await res.text());
+    if (!res.ok) return { ...UNKNOWN_STOCK };
+    const data = await res.json();
+    return parseStockFromService(data.service ?? data);
   } catch {
-    return { stockClass: "unknown", confidence: "unknown" };
+    return { ...UNKNOWN_STOCK };
   }
 }
 
-// Bounded parallelism for website scrapes (RTT rate-limits above ~6 in flight).
+// Bounded parallelism for the per-service API lookups (RTT rate-limits above ~6 in flight).
 async function mapWithConcurrency(items, limit, worker) {
   const results = new Array(items.length);
   let next = 0;
@@ -393,11 +426,11 @@ async function fetchDirection(token, origin, dest, date) {
   }
   const stocks = await mapWithConcurrency(
     entries,
-    MAX_CONCURRENT_SCRAPES,
+    MAX_CONCURRENT_LOOKUPS,
     async (e) => {
       const id = serviceUidOf(e);
-      if (!id) return { stockClass: "unknown", confidence: "unknown" };
-      return scrapeStock(id, date);
+      if (!id) return { ...UNKNOWN_STOCK };
+      return fetchStock(token, id, date);
     }
   );
   return entries
@@ -535,6 +568,28 @@ function datePage(key, dayLabel, dayData) {
 }
 
 function renderHtml(today, tomorrow, generatedAt) {
+  // If there are services but not a single one could be identified as Aurora or
+  // Meridian, stock identification is effectively down (e.g. the upstream data
+  // source is unavailable). Say so plainly rather than showing a silent wall of
+  // "Unknown" cards that reads as "no Auroras are running".
+  const allServices = [
+    ...today.toLondon,
+    ...today.toSheffield,
+    ...tomorrow.toLondon,
+    ...tomorrow.toSheffield,
+  ];
+  const identifiedCount = allServices.filter(
+    (s) => s.stockClass === "810" || s.stockClass === "222"
+  ).length;
+  const idUnavailable = allServices.length > 0 && identifiedCount === 0;
+  const noticeHtml = idUnavailable
+    ? `<div class="notice" role="status">
+        <strong>Stock identification is temporarily unavailable.</strong>
+        Services, times and platforms below are correct, but we can't currently
+        tell Aurora (810) from Meridian (222). This usually resolves once each
+        train's formation is confirmed.
+      </div>`
+    : "";
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -815,6 +870,16 @@ function renderHtml(today, tomorrow, generatedAt) {
   }
 
   .empty { color: var(--muted); font-size: 13px; margin: 0; }
+  .notice {
+    margin: 4px 0 0;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--warn) 8%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--warn) 26%, var(--border));
+    color: var(--fg);
+    font-size: 13px; line-height: 1.5;
+  }
+  .notice strong { color: var(--warn); font-weight: 600; }
   .error {
     background: color-mix(in srgb, var(--warn) 8%, var(--surface));
     border: 1px solid color-mix(in srgb, var(--warn) 28%, var(--border));
@@ -850,6 +915,7 @@ function renderHtml(today, tomorrow, generatedAt) {
     <h1>EMR · Sheffield ⇄ London</h1>
     <div class="sub">Today and tomorrow, with Class 810 (Aurora) vs Class 222 (Meridian) identification.</div>
   </header>
+  ${noticeHtml}
   <nav class="controls" aria-label="Display controls">
     <div class="seg" role="tablist" aria-label="Date">
       <button data-control="date" data-value="today">Today</button>
@@ -1011,7 +1077,14 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error("Unhandled error:", err);
-  process.exit(1);
-});
+// Exported for unit tests; kept internal to the run otherwise.
+export { parseStockFromService, classFromDesignation, renderHtml };
+
+// Only drive a live run when executed directly (`node generate.mjs`), so the
+// pure helpers above can be imported and tested without hitting the API.
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch((err) => {
+    console.error("Unhandled error:", err);
+    process.exit(1);
+  });
+}

@@ -11,9 +11,10 @@ A single Node 22+ script (`generate.mjs`, no dependencies) that:
 1. Exchanges the Realtime Trains v2 refresh token for an access token.
 2. Fetches today's and tomorrow's schedule for both directions
    (Sheffield → STP and STP → Sheffield).
-3. For each EMR passenger service, scrapes the RTT website for stock
-   identification — preferring "Know Your Train" confirmed formation data,
-   falling back to the CIF "Pathed as" power type for predictions.
+3. For each EMR passenger service, reads the RTT API's per-service allocation
+   data for stock identification — the "Know Your Train" live formation (unit
+   number / leading class) when it's populated (confirmed), or the planned
+   allocation when it isn't yet (predicted, typical for tomorrow).
 4. Writes `index.html` with client-side filters (date, direction, stock class),
    a machine-readable `data.json` feed, and appends the run to `ledger.csv`.
 
@@ -124,6 +125,9 @@ workflow if it matters.
 
 ## Data source
 
-[Realtime Trains](https://www.realtimetrains.co.uk/) — v2 API for the
-schedule, website scrape for the "Pathed as" power type and day-of
-formation data. Both require an RTT API account.
+[Realtime Trains](https://www.realtimetrains.co.uk/) — v2 API
+(`data.rtt.io`) for both the schedule and the per-service allocation /
+"Know Your Train" formation data used for stock identification. Requires an
+RTT API account. (Stock ID previously came from scraping the RTT website;
+that's now behind a Cloudflare bot challenge, so it reads the allocation data
+straight from the API instead.)
