@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-01T16:57:30.670Z",
+  "generatedAt": "2026-08-01T19:05:36.189Z",
   "today": {
     "date": "2026-08-01",
     "toLondon": [
@@ -113,8 +113,9 @@
         "departureTime": "16:00",
         "arrivalTime": "18:09",
         "actualDepartureTime": "16:00",
-        "actualArrivalTime": null,
+        "actualArrivalTime": "18:05",
         "departureLatenessMin": 0,
+        "arrivalLatenessMin": -3,
         "origin": "Sheffield",
         "destination": "St Pancras International",
         "platform": "2",
