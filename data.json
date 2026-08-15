@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-15T05:22:35.513Z",
+  "generatedAt": "2026-08-15T07:28:53.654Z",
   "today": {
     "date": "2026-08-15",
     "toLondon": [
@@ -113,8 +113,9 @@
         "serviceUid": "J21646",
         "departureTime": "07:32",
         "arrivalTime": "09:42",
-        "actualDepartureTime": null,
+        "actualDepartureTime": "07:32",
         "actualArrivalTime": null,
+        "departureLatenessMin": 0,
         "origin": "St Pancras International",
         "destination": "Sheffield",
         "platform": "3",
