@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-15T16:21:31.370Z",
+  "generatedAt": "2026-08-15T18:26:14.858Z",
   "today": {
     "date": "2026-08-15",
     "toLondon": [
@@ -113,8 +113,9 @@
         "departureTime": "16:00",
         "arrivalTime": "18:09",
         "actualDepartureTime": "16:24",
-        "actualArrivalTime": null,
+        "actualArrivalTime": "18:29",
         "departureLatenessMin": 24,
+        "arrivalLatenessMin": 20,
         "origin": "Sheffield",
         "destination": "St Pancras International",
         "platform": "2",
@@ -248,8 +249,9 @@
         "departureTime": "15:32",
         "arrivalTime": "17:44",
         "actualDepartureTime": "15:32",
-        "actualArrivalTime": null,
+        "actualArrivalTime": "17:46",
         "departureLatenessMin": 0,
+        "arrivalLatenessMin": 1,
         "origin": "St Pancras International",
         "destination": "Sheffield",
         "platform": "3",
