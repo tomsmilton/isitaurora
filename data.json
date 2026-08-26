@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-26T02:23:24.441Z",
+  "generatedAt": "2026-08-26T03:52:16.257Z",
   "today": {
     "date": "2026-08-26",
     "toLondon": [
@@ -7,8 +7,9 @@
         "serviceUid": "W70753",
         "departureTime": "04:49",
         "arrivalTime": "07:07",
-        "actualDepartureTime": null,
+        "actualDepartureTime": "04:51",
         "actualArrivalTime": null,
+        "departureLatenessMin": 1,
         "origin": "Sheffield",
         "destination": "St Pancras International",
         "platform": "8A",
